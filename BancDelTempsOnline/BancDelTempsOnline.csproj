@@ -8,8 +8,9 @@
     <OutputType>WinExe</OutputType>
     <RootNamespace>BancDelTempsOnline</RootNamespace>
     <AssemblyName>BancDelTempsOnline</AssemblyName>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <AppDesignerFolder>Properties</AppDesignerFolder>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">
     <PlatformTarget>x86</PlatformTarget>
@@ -31,6 +32,15 @@
     <DefineConstants>TRACE</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Gabriel.Cat.Google">
+      <HintPath>D:\Documentos\Visual Studio 2012\Projects\Gabriel.Cat.Google\bin\Release\Gabriel.Cat.Google.dll</HintPath>
+    </Reference>
+    <Reference Include="Gabriel.Cat.Utilitats">
+      <HintPath>..\..\Gabriel.Cat.Utilitats\Gabriel.Cat.Utilitats\bin\Release\Gabriel.Cat.Utilitats.dll</HintPath>
+    </Reference>
+    <Reference Include="Gabriel.Cat.Xarxa">
+      <HintPath>..\..\Gabriel.Cat.Xarxa\bin\Release\Gabriel.Cat.Xarxa.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.CSharp">
       <RequiredTargetFramework>4.0</RequiredTargetFramework>
     </Reference>
@@ -69,13 +79,13 @@
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Properties\WPFAssemblyInfo.cs" />
-    <Compile Include="Window1.xaml.cs">
+    <Compile Include="MainApp.xaml.cs">
       <SubType>Code</SubType>
-      <DependentUpon>Window1.xaml</DependentUpon>
+      <DependentUpon>MainApp.xaml</DependentUpon>
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <Page Include="Window1.xaml" />
+    <Page Include="MainApp.xaml" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
