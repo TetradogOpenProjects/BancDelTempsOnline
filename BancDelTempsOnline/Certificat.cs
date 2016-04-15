@@ -15,48 +15,141 @@ namespace BancDelTempsOnline
 	/// <summary>
 	/// Description of Certificat.
 	/// </summary>
-	public class Certificat
+	public class Certificat:ObjecteSqlIdAuto
 	{
+		const string NOMTAULA="Certificats";
 		string nom;
-		//son tots els serveis que convalida el certificat
-		Llista<Servei> serveis;
-		ListaUnica<Usuari> usuaris;
-		public Certificat()
+		public Certificat(string nom)
+			: base(NOMTAULA, "", "Id")
 		{
-			serveis = new Llista<Servei>();
-			usuaris = new ListaUnica<Usuari>();
+			AltaCanvi("Nom");
+			this.nom = nom;
 		}
-		public Llista<Servei> Serveis {
-			get {			
-				return serveis;
+
+		public string Nom {
+			get {
+				return nom;
+			}
+			set {
+				nom = value;
+				CanviString("Nom", nom);
 			}
 		}
-		public ListaUnica<Usuari> UsuarisCertificats {
-			get {				
-				return usuaris;
+
+		#region implemented abstract members of ObjecteSql
+
+
+		public override string StringInsertSql(TipusBaseDeDades tipusBD)
+		{
+			return "Insert into " + Taula + " (Nom) values('" + Nom + "');";
+		}
+
+
+		#endregion
+		public static string StringCreateTable()
+		{
+			return "create table "+NOMTAULA+"(Id int NOT NULL AUTO_INCREMENT,Nom varchar(200) Not null);";
+		}
+
+	}
+	public class ServeiCertificat:ObjecteSqlIdAuto
+	{
+		const string NOMTAULA="ServeisCertificat";
+		Certificat certificat;
+		Servei servei;
+		public ServeiCertificat(Certificat certificat, Servei servei)
+			: base(NOMTAULA, "", "Id")
+		{
+			AltaCanvi("Certificat");
+			AltaCanvi("Servei");
+			this.certificat = certificat;
+			this.servei = servei;
+		}
+		public Certificat Certificat {
+			get {
+				return certificat;
+			}
+			set {
+				certificat = value;
+				base.CanviString("Certificat", certificat.PrimaryKey);
 			}
 		}
-		public bool PotRealitzarServeis(Usuari usuari)
-		{
-			if (usuari == null)
-				throw new ArgumentNullException();
-			return usuaris.Existe(usuari);
+
+		public Servei Servei {
+			get {
+				return servei;
+			}
+			set {
+				servei = value;
+				base.CanviString("Servei", servei.PrimaryKey);
+			}
 		}
-		public static Usuari[] UsuarisCertificatsServei(IEnumerable<Usuari> usuaris, Certificat certificat)
+		#region implemented abstract members of ObjecteSql
+		public override string StringInsertSql(TipusBaseDeDades tipusBD)
 		{
-			if (usuaris == null || certificat == null)
-				throw new ArgumentNullException();
-			return usuaris.Filtra((usuari) => {
-				return certificat.PotRealitzarServeis(usuari);
-			}).ToTaula();
+			string sentencia = "insert into " + Taula + " (CertificatId,ServeiId) value(";
+			sentencia += "" + Certificat.PrimaryKey + ",";
+			sentencia += "" + Servei.PrimaryKey + ");";
+			return sentencia;
 		}
-		public static Certificat[] CertificatsAmbServei(IEnumerable<Certificat> certificats, Servei servei)
+		#endregion
+				public static string StringCreateTable()
 		{
-			if (certificats == null || servei == null)
-				throw new ArgumentNullException();
-			return certificats.Filtra((certificat) => {
-				return certificat.Serveis.Existeix(servei);
-			}).ToTaula();
+			string sentencia="create table "+NOMTAULA+"(";
+			sentencia+="Id int NOT NULL AUTO_INCREMENT,";
+			sentencia+="CertificatId int NOT NULL references Certificats(Id),";
+			sentencia+="ServeiId int NOT NULL references Serveis(Id));";
+			return sentencia;
+		}
+	}
+	public class CertificatUsuari:ObjecteSqlIdAuto
+	{
+		const string NOMTAULA="CertificatsUsuari";
+		Certificat certificat;
+		Usuari usuari;
+		public CertificatUsuari(Certificat certificat, Usuari usuari)
+			: base(NOMTAULA, "", "Id")
+		{
+			AltaCanvi("Certificat");
+			AltaCanvi("Usuari");
+			this.certificat = certificat;
+			this.usuari = usuari;
+		}
+
+		public Certificat Certificat {
+			get {
+				return certificat;
+			}
+			set {
+				certificat = value;
+				CanviString("Certificat", certificat.PrimaryKey);
+			}
+		}
+
+		public Usuari Usuari {
+			get {
+				return usuari;
+			}
+			set {
+				usuari = value;
+				CanviString("Usuari", usuari.PrimaryKey);
+			}
+		}
+		#region implemented abstract members of ObjecteSql
+
+		public override string StringInsertSql(TipusBaseDeDades tipusBD)
+		{
+			return "insert into " + Taula + "(CertificatId,UsuariId) values(" + certificat.PrimaryKey + "," + usuari.PrimaryKey + ");";
+		}
+
+		#endregion
+		public static string StringCreateTable()
+		{
+			string sentencia="create table "+NOMTAULA+"(";
+			sentencia+="Id int NOT NULL AUTO_INCREMENT,";
+			sentencia+="CertificatId int NOT NULL references Certificats(Id),";
+			sentencia+="UsuariId varchar(10) NOT NULL references Usuaris(NIE));";
+			return sentencia;
 		}
 	}
 }

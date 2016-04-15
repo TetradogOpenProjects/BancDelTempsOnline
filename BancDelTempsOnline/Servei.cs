@@ -15,24 +15,52 @@ namespace BancDelTempsOnline
 	/// <summary>
 	/// Description of Servei.
 	/// </summary>
-	public class Servei:IClauUnicaPerObjecte,IComparable<Servei>
+	public class Servei:ObjecteSqlIdAuto,IClauUnicaPerObjecte,IComparable<Servei>
 	{
+		const string NOMTAULA="Serveis";
 		string nom;
 		string uriImatge;
 		string descripció;
-		ListaUnica<Usuari> usuaris;
+		public Servei(string nom,string uriImatge,string descripció):base(NOMTAULA,"","Id")
+		{
+			AltaCanvi("Nom");
+			AltaCanvi("UriImatge");
+			AltaCanvi("Descripcio");
+			Nom=nom;
+			UriImatge=uriImatge;
+			Descripció=descripció;
+			
+		}
 		public string Nom {
 			get{ return nom; }
-			set{ nom = value; }
+			set{ nom = value;
+				CanviString("Nom",nom);
+			}
 		}
 		public string UriImatge {
 			get{ return uriImatge; }
-			set{ uriImatge = value; }
+			set{ uriImatge = value;
+				CanviString("UriImatge",uriImatge);
+			}
 		}
 		public string Descripció {
 			get{ return descripció; }
-			set{ descripció = value; }
+			set{ descripció = value;
+				CanviString("Descripcio",descripció);
+			}
 		}
+
+		#region implemented abstract members of ObjecteSql
+
+
+		public override string StringInsertSql(TipusBaseDeDades tipusBD)
+		{
+			return "Insert into "+Taula+"(Nom,UriImatge,Descripcio) values('"+Nom+"','"+UriImatge+"','"+Descripció+"');";
+		}
+
+
+		#endregion
+
 		#region IClauUnicaPerObjecte implementation
 
 		public IComparable Clau()
@@ -50,21 +78,69 @@ namespace BancDelTempsOnline
 		}
 
 		#endregion
-		public bool OfertaServei(Usuari usuari)
+		public static string StringCreateTable()
 		{
-			return usuaris.Existe(usuari);
-		}
-		public static Usuari[] UsuarisOfertsServei(Usuari[] usuaris, Servei servei)
-		{
-			if (usuaris == null || servei == null)
-				throw new ArgumentNullException();
-			List<Usuari> usuarisOfertats = new List<Usuari>();
-			for (int i = 0; i < usuaris.Length; i++) {
-				if (servei.OfertaServei(usuaris[i]))
-					usuarisOfertats.Add(usuaris[i]); 
-			}
-			return usuarisOfertats.ToArray();
+			string sentencia="create table "+NOMTAULA+" (";
+			sentencia+="Nom varchar(25) NOT NULL,";
+			sentencia+="UriImatge varchar(250),";
+			sentencia+="Descripcio varchar(200));";
+			return sentencia;
 		}
 
+	}
+	public class ServeiUsuari:ObjecteSqlIdAuto
+	{
+		const string NOMTAULA="ServeisUsuari";
+		Servei servei;
+		Usuari usuari;
+		public ServeiUsuari(Servei servei,Usuari usuari):base(NOMTAULA,"","Id")
+		{
+			AltaCanvi("Servei");
+			AltaCanvi("Usuari");
+			Servei=servei;
+			Usuari=usuari;
+		}
+
+		public Servei Servei {
+			get {
+				return servei;
+			}
+			set {
+				servei = value;
+				CanviString("Servei",servei.PrimaryKey);
+			}
+		}
+
+		public Usuari Usuari {
+			get {
+				return usuari;
+			}
+			set {
+				usuari = value;
+				CanviString("Usuari",usuari.PrimaryKey);
+			}
+		}
+		#region implemented abstract members of ObjecteSql
+
+
+		public override string StringInsertSql(TipusBaseDeDades tipusBD)
+		{
+			string sentencia = "insert into " + Taula + " (ServeiId,UsuariId) value(";
+			sentencia += "" + Servei.PrimaryKey + ",";
+			sentencia += "'" + Usuari.PrimaryKey + "');";
+			return sentencia;
+		}
+
+
+		#endregion
+		public static string StringCreateTable()
+		{
+			string sentencia="create table "+NOMTAULA+"(";
+			sentencia+="Id int NOT NULL AUTO_INCREMENT,";
+			sentencia+="ServeiId int NOT NULL references Serveis(Id),";
+			sentencia+="UsuariId varchar(10) NOT NULL references Usuaris(NIE));";
+			return sentencia;
+		}
+		
 	}
 }
