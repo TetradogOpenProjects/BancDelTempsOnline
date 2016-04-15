@@ -7,6 +7,7 @@
  * Para cambiar esta plantilla use Herramientas | Opciones | Codificación | Editar Encabezados Estándar
  */
 using System;
+using System.Collections.Generic;
 using Gabriel.Cat;
 
 namespace BancDelTempsOnline
@@ -19,7 +20,7 @@ namespace BancDelTempsOnline
 		string nom;
 		string uriImatge;
 		string descripció;
-		
+		ListaUnica<Usuari> usuaris;
 		public string Nom {
 			get{ return nom; }
 			set{ nom = value; }
@@ -49,5 +50,21 @@ namespace BancDelTempsOnline
 		}
 
 		#endregion
+		public bool OfertaServei(Usuari usuari)
+		{
+			return usuaris.Existe(usuari);
+		}
+		public static Usuari[] UsuarisOfertsServei(Usuari[] usuaris, Servei servei)
+		{
+			if (usuaris == null || servei == null)
+				throw new ArgumentNullException();
+			List<Usuari> usuarisOfertats = new List<Usuari>();
+			for (int i = 0; i < usuaris.Length; i++) {
+				if (servei.OfertaServei(usuaris[i]))
+					usuarisOfertats.Add(usuaris[i]); 
+			}
+			return usuarisOfertats.ToArray();
+		}
+
 	}
 }

@@ -15,7 +15,7 @@ namespace BancDelTempsOnline
 	/// <summary>
 	/// Description of Usuari.
 	/// </summary>
-	public class Usuari:IClauUnicaPerObjecte
+	public class Usuari:ObjecteSql,IClauUnicaPerObjecte
 	{
 		const long SOCIPENDENT = -1;
 		
@@ -27,19 +27,35 @@ namespace BancDelTempsOnline
 		string telefon;
 		string email;
 		bool actiu;
-		DateTime dataInscripcioFormal;
 		//si el per defecte es que s'ha de validar encara
-		Llista<Servei> serveis;
-		//serveis que vol fer
-		Llista<Certificat> certificats;
-		//per poder fer un servei el certificat ha de contenir-lo
+		DateTime dataInscripcioFormal;
+
+
 		
-		public Usuari()
+		public Usuari(long numSoci,string nom,string uriImatgePerfil,string municipi,string nie,string telefon,string email,bool actiu,DateTime dataInscripcioFormal,Servei[] serveis,Certificat[] certificats)
+			:base("usuaris",nie,"NIE")
 		{
-			certificats = new Llista<Certificat>();
-			serveis = new Llista<Servei>();
-			numSoci = SOCIPENDENT;
+			base.AltaCanvi("NumSoci");
+			base.AltaCanvi("Nom");
+			base.AltaCanvi("UriImatgePerfil");
+			base.AltaCanvi("Municipi");
+			base.AltaCanvi("NIE");
+			base.AltaCanvi("Telefon");
+			base.AltaCanvi("Email");
+			base.AltaCanvi("Actiu");
+			base.AltaCanvi("DataInscripcioFormal");
+			NumSoci=numSoci;
+			Nom=nom;
+			UriImatgePerfil=uriImatgePerfil;
+			Municipi=municipi;
+			NIE=nie;
+			Telefon=telefon;
+			Email=email;
+			Actiu=actiu;
+			DataInscripcioFormal=dataInscripcioFormal;
 		}
+		public Usuari(string nom,string uriImatgePerfil,string municipi,string nie,string telefon,string email,bool actiu,DateTime dataInscripcioFormal)
+			:this(SOCIPENDENT,nom,uriImatgePerfil,municipi,nie,telefon,email,actiu,dataInscripcioFormal,serveis,certificats){}
 		#region Propietats
 		public long NumSoci {
 			get{ return numSoci; }
@@ -86,19 +102,6 @@ namespace BancDelTempsOnline
 		public bool Validat {
 			get{ return !dataInscripcioFormal.Equals(default(DateTime)); }
 		}
-
-		public Llista<Certificat> Certificats {
-			get {
-				return certificats;
-			}
-		}
-
-		public Llista<Servei> Serveis {
-			get {
-				return serveis;
-			}
-		}
-
 		#region IClauUnicaPerObjecte implementation
 
 
@@ -111,37 +114,7 @@ namespace BancDelTempsOnline
 		#endregion
 
 		#endregion
-		public bool PotRealitzarServei(Servei servei)
-		{
-			if (servei == null)
-				throw new ArgumentNullException();
-			bool potFerHo = false;
-			for (int i = 0; i < certificats.Count && !potFerHo; i++)
-				potFerHo = certificats[i].Serveis.Existeix(servei);
-			return potFerHo;
-		}
-		public static Usuari[] UsuarisOfertsServei(Usuari[] usuaris, Servei servei)
-		{
-			if (usuaris == null || servei == null)
-				throw new ArgumentNullException();
-			List<Usuari> usuarisOfertats = new List<Usuari>();
-			for (int i = 0; i < usuaris.Length; i++) {
-				if (usuaris[i].Serveis.Existeix(servei))
-					usuarisOfertats.Add(usuaris[i]);
-			}
-			return usuarisOfertats.ToArray();
-		}
-		public static Usuari[] UsuarisCertificatsServei(Usuari[] usuaris, Servei servei)
-		{
-			if (usuaris == null || servei == null)
-				throw new ArgumentNullException();
-			List<Usuari> usuarisCertificats = new List<Usuari>();
-			for (int i = 0; i < usuaris.Length; i++) {
-				if (usuaris[i].PotRealitzarServei(servei))
-					usuarisCertificats.Add(usuaris[i]);
-			}
-			return usuarisCertificats.ToArray();
-		}
+	
 		public static Usuari[] FiltraPerMunicipi(Usuari[] usuaris,string municipi)
 		{
 			return usuaris.Filtra((usuari)=>{return usuari.Municipi==municipi;}).ToTaula();
