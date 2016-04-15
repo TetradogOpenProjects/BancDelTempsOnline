@@ -1,9 +1,19 @@
-﻿<Window x:Class="BancDelTempsOnline.Window1"
-	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-	Title="BancDelTempsOnline" Height="300" Width="300"
-	>
-	<Grid>
-		
-	</Grid>
+<?xml version="1.0" encoding="utf-8"?>
+<Window
+	x:Class="BancDelTempsOnline.Window1" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	Title="BancDelTempsOnline"
+	Height="300"
+	Width="300">
+		<TabControl>
+				<TabItem Header="Usuaris Conectats">
+					<UniformGrid x:Name="listUsers"/>
+				</TabItem>
+				<TabItem Header="Peticions">
+					<StackPanel x:Name="listPeticions"/>
+				</TabItem>
+				<TabItem Header="Log">
+					<StackPanel x:Name="listLog"/>
+				</TabItem>
+		</TabControl>
+
 </Window>

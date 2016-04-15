@@ -32,11 +32,17 @@
     <DefineConstants>TRACE</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Gabriel.Cat.BaseDeDades">
+      <HintPath>D:\Documentos\SharpDevelop Projects\Gabriel.Cat.BaseDeDades\bin\Release\Gabriel.Cat.BaseDeDades.dll</HintPath>
+    </Reference>
     <Reference Include="Gabriel.Cat.Google">
       <HintPath>D:\Documentos\Visual Studio 2012\Projects\Gabriel.Cat.Google\bin\Release\Gabriel.Cat.Google.dll</HintPath>
     </Reference>
     <Reference Include="Gabriel.Cat.Utilitats">
       <HintPath>..\..\Gabriel.Cat.Utilitats\Gabriel.Cat.Utilitats\bin\Release\Gabriel.Cat.Utilitats.dll</HintPath>
+    </Reference>
+    <Reference Include="Gabriel.Cat.Wpf">
+      <HintPath>D:\Documentos\SharpDevelop Projects\Gabriel.Cat.Wpf\Gabriel.Cat.Wpf\bin\Release\Gabriel.Cat.Wpf.dll</HintPath>
     </Reference>
     <Reference Include="Gabriel.Cat.Xarxa">
       <HintPath>..\..\Gabriel.Cat.Xarxa\bin\Release\Gabriel.Cat.Xarxa.dll</HintPath>
@@ -77,12 +83,15 @@
       <SubType>Code</SubType>
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Certificat.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Properties\WPFAssemblyInfo.cs" />
     <Compile Include="MainApp.xaml.cs">
       <SubType>Code</SubType>
       <DependentUpon>MainApp.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Servei.cs" />
+    <Compile Include="Usuari.cs" />
   </ItemGroup>
   <ItemGroup>
     <Page Include="MainApp.xaml" />
