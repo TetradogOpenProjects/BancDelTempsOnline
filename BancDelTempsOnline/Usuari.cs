@@ -31,7 +31,7 @@ namespace BancDelTempsOnline
 		DateTime dataInscripcioFormal;
 		DateTime dataRegistre;
 
-		
+		//usuari donat d'alta
 		public Usuari(int numSoci,string nom,string uriImatgePerfil,string municipi,string nie,string telefon,string email,bool actiu,DateTime dataInscripcioFormal,DateTime dataRegistre)
 			:base(NOMTAULA,nie,"NIE")
 		{
@@ -56,8 +56,12 @@ namespace BancDelTempsOnline
 			this.dataInscripcioFormal=dataInscripcioFormal;
 			this.dataRegistre=dataRegistre;
 		}
+		//usuari registrat sense donar d'alta
 		public Usuari(string nom,string uriImatgePerfil,string municipi,string nie,string telefon,string email,bool actiu,DateTime dataInscripcioFormal,DateTime dataRegistre)
 			:this(SOCIPENDENT,nom,uriImatgePerfil,municipi,nie,telefon,email,actiu,dataInscripcioFormal,dataRegistre){} 
+		//nou registre
+				public Usuari(string nom,string uriImatgePerfil,string municipi,string nie,string telefon,string email)
+					:this(SOCIPENDENT,nom,uriImatgePerfil,municipi,nie,telefon,email,false,default(DateTime),DateTime.Now){}
 		#region Propietats
 		public int NumSoci {
 			get{ return numSoci; }
@@ -186,7 +190,7 @@ namespace BancDelTempsOnline
 		}
 		public static Usuari[] FiltraActius(Usuari[] usuaris)
 		{
-			return usuaris.Filtra((usuari)=>{return usuari.Actiu}).ToTaula();
+			return usuaris.Filtra((usuari)=>{ return usuari.Actiu; }).ToTaula();
 		}
 	}
 }

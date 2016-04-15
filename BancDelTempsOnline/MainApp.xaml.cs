@@ -67,7 +67,7 @@ namespace BancDelTempsOnline
 
 		void PossaMissatgeLog(string message, int idMessage)
 		{
-			ObjViewer objMessage = message.ToObjViewer(() => {
+			ObjViewer objMessage = message.ToObjViewer((obj) => {
 			});
 			
 			switch ((MensajesLog)idMessage) {
@@ -101,25 +101,27 @@ namespace BancDelTempsOnline
 					} else {
 						//pagina registre
 						paginaHaEntregar = PaginaRegistre(googleUser);
-						cliente.Tag=googleUser;
+						cliente.Tag = googleUser;
 					}
+					//redirigir url perque conté el codi de login 
+					 //per fer ho
 				} else {
 					//envio la pagina de login, la principal
 					paginaHaEntregar = paginaLogin;
 				}
 			} else {
 				//atenc a la petició
-				if(cliente.Tag is Usuari){
-				//es un usuari ja creat que fa una petició
-				paginaHaEntregar = PaginaPeticioUsuari(cliente.Tag as Usuari, cliente.Client.Request);
-				}else{
-				//es un usuari nou que ha fet login i a acabat d'emplenar el formulari
-				//mirar si un cop rebut el formulari es pot fer alguna trampa si es aixi protegirho
-				 usuari=CreaUsuari(cliente.Client.Request);
-                 cliente.Tag=usuari;
-                 usuaris.Afegir(usuari.Email,usuari);
-                 //ja ha finalitzat el registre ara li envio la seva pagina home
-                 paginaHaEntregar=PaginaHomeUsuari(usuari);
+				if (cliente.Tag is Usuari) {
+					//es un usuari ja creat que fa una petició
+					paginaHaEntregar = PaginaPeticioUsuari(cliente.Tag as Usuari, cliente.Client.Request);
+				} else {
+					//es un usuari nou que ha fet login i a acabat d'emplenar el formulari
+					//mirar si un cop rebut el formulari es pot fer alguna trampa si es aixi protegirho
+					usuari = CreaUsuari(cliente.Client.Request);
+					cliente.Tag = usuari;
+					usuaris.Afegir(usuari.Email, usuari);
+					//ja ha finalitzat el registre ara li envio la seva pagina home
+					paginaHaEntregar = PaginaHomeUsuari(usuari);
 				}
 			}
 			cliente.Client.Response.Send(paginaHaEntregar);
@@ -132,18 +134,37 @@ namespace BancDelTempsOnline
 
 		Usuari CreaUsuari(System.Net.HttpListenerRequest request)
 		{
+			//trec els camps post i els poso al usuari
+			LlistaOrdenada<string,string> postDataDic=request.PostDataDiccionary(); 
+			string nom=postDataDic["Nom"];
+			string uriImatgePerfil=postDataDic["UriImatgePerfil"];
+			string municipi=postDataDic["Municipi"];
+			string nie=postDataDic["NIE"];
+			string telefon=postDataDic["Telefon"];
+			string email=postDataDic["Email"];
+			return new Usuari(nom,uriImatgePerfil,municipi,nie,telefon,email);
 		}
 		string PaginaPeticioUsuari(Usuari usuari, System.Net.HttpListenerRequest request)
 		{
-
+			LlistaOrdenada<string,string> postDataDic=request.PostDataDiccionary(); 
+			string paginaPeticio="";
+			//es fa la petició i es crea la pagina
+			return paginaPeticio;
 		}
 		string PaginaHomeUsuari(Usuari usuari)
 		{
-
+			string paginaHomeUsuari="";
+			//es crea la pagina home de l'usuari que sigui un camp calculat un cop i si es donden o es posen banns doncs es torna a calcular
+			return paginaHomeUsuari;
 		}
 		string PaginaRegistre(GooglePlusUser googleUser)
 		{
-			
+			string paginaRegistreUsuari=paginaRegistre;
+			paginaRegistre=paginaRegistre.Replace("#NOM#",googleUser.Nombre);
+			paginaRegistre=paginaRegistre.Replace("#COGNOMS#",googleUser.Apellidos);
+			paginaRegistre=paginaRegistre.Replace("#EMAIL#",googleUser.Nombre);
+			paginaRegistre=paginaRegistre.Replace("#URIIMG#",googleUser.ImagenPerfilUri);
+			return paginaRegistre;
 		}
 	}
 }
