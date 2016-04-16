@@ -61,7 +61,7 @@ namespace BancDelTempsOnline
 			usuaris = new LlistaOrdenada<string, Usuari>();
 			servidor = new ServidorHttpSeguro(TEMPSPERRENOVARIP, INTENTSCLIENTPERSERPERILLOS, GooglePlusUser.RedirectUri, urlPaginaFitxers); 
 			servidor.ClienteSeguro += PeticionWeb;
-			servidor.ClienteNoSeguro += BanPorAbuso;
+			servidor.ClienteNoSeguro += BanPerAbus;
 			Log.Listen += PossaMissatgeLog;
 			paginaLogin = GooglePlusUser.HtmlBasicLogin();//possarlo bonic
 			servidor.Start();
@@ -118,7 +118,7 @@ namespace BancDelTempsOnline
 			GooglePlusUser gUsuari;
 			Usuari usuariRegistrat;
 			//si no pot el bloquejo,notifico i poso ban
-			if(!fitxers.Existeix(url))//posar la validació si pot o no l'usuari obtenir la url 'or' 
+			if(!fitxers.Existeix(url))//posar la validació si pot o no l'usuari obtenir la url si no tingues dret a accedir llavors li cau un ban!
 			{
 				cliente.Bloqueado=true;
 				if(cliente.Tag==null){
@@ -192,7 +192,7 @@ namespace BancDelTempsOnline
 			return paginaHaEntregar;
 		}
 
-		void BanPorAbuso(ClienteServidorHttpSeguro cliente)
+		void BanPerAbus(ClienteServidorHttpSeguro cliente)
 		{
 			if (cliente.Tag == null) {//si no ha fet login
 				Log.Send(String.Format("La ip {0} s'ha passat de peticions", cliente.DireccionIP), (int)MissatgesLog.Important);
