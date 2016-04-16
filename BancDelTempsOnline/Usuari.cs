@@ -27,7 +27,7 @@ namespace BancDelTempsOnline
 		string telefon;
 		string email;
 		bool actiu;
-		//si el per defecte es que s'ha de validar encara
+		//si té el valor per defecte es que s'ha de validar encara
 		DateTime dataInscripcioFormal;
 		DateTime dataRegistre;
 
