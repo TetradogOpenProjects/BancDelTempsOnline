@@ -18,7 +18,8 @@ namespace BancDelTempsOnline
 	public class Usuari:ObjecteSql,IClauUnicaPerObjecte
 	{
 		const int SOCIPENDENT = -1;
-		const string NOMTAULA="usuaris";
+		public const string TAULA="usuaris";
+        //atributs clase
 		int numSoci;
 		string nom;
 		string uriImatgePerfil;
@@ -30,10 +31,11 @@ namespace BancDelTempsOnline
 		//si té el valor per defecte es que s'ha de validar encara
 		DateTime dataInscripcioFormal;
 		DateTime dataRegistre;
-
+        ListaUnica<CertificatUsuari> certificats = new ListaUnica<CertificatUsuari>();
+        ListaUnica<MunicipiQueVolAnar> municipisQueVolAnar;//es una llista de municipis on l'usuari pot anar
 		//usuari donat d'alta
 		public Usuari(int numSoci,string nom,string uriImatgePerfil,string municipi,string nie,string telefon,string email,bool actiu,DateTime dataInscripcioFormal,DateTime dataRegistre)
-			:base(NOMTAULA,nie,"NIE")
+			:base(TAULA,nie,"NIE")
 		{
 			base.AltaCanvi("NumSoci");
 			base.AltaCanvi("Nom");
@@ -55,14 +57,19 @@ namespace BancDelTempsOnline
 			this.actiu=actiu;
 			this.dataInscripcioFormal=dataInscripcioFormal;
 			this.dataRegistre=dataRegistre;
+            municipisQueVolAnar = new ListaUnica<MunicipiQueVolAnar>();
 		}
-		//usuari registrat sense donar d'alta
-		public Usuari(string nom,string uriImatgePerfil,string municipi,string nie,string telefon,string email,bool actiu,DateTime dataInscripcioFormal,DateTime dataRegistre)
-			:this(SOCIPENDENT,nom,uriImatgePerfil,municipi,nie,telefon,email,actiu,dataInscripcioFormal,dataRegistre){} 
-		//nou registre
+		//usuari registrat sense donar d'alta: per tant no esta activat ni te una data d'inscripcio formal!
+		public Usuari(string nom,string uriImatgePerfil,string municipi,string nie,string telefon,string email,DateTime dataRegistre)
+			:this(SOCIPENDENT,nom,uriImatgePerfil,municipi,nie,telefon,email,false,default(DateTime),dataRegistre){} 
+		//nou registre:no esta activat,ni te data d'inscripcio i l'hora del registre es el moment quan ho fa
 				public Usuari(string nom,string uriImatgePerfil,string municipi,string nie,string telefon,string email)
 					:this(SOCIPENDENT,nom,uriImatgePerfil,municipi,nie,telefon,email,false,default(DateTime),DateTime.Now){}
 		#region Propietats
+        public ListaUnica<CertificatUsuari> Certificats
+        {
+            get { return certificats; }
+        }
 		public int NumSoci {
 			get{ return numSoci; }
 			set{ numSoci = value;
@@ -83,10 +90,12 @@ namespace BancDelTempsOnline
 		}
 		public string Municipi {
 			get{ return municipi; }
-			set{ municipi = value;
-				CanviString("Municipi",Municipi);
+			set{
+                municipi = value;
+				CanviString("Municipi",Municipi);   
 			}
 		}
+
 		public string NIE {
 			get{ return nie; }
 			set{ nie = value; 
@@ -169,28 +178,158 @@ namespace BancDelTempsOnline
 		#endregion
 
 		#endregion
-		public static string StringCreateTable()
-		{
-			string sentencia="create table "+NOMTAULA+"(";
-			sentencia+="NumSoci int,";//fer trigger i secuencia per quan possin la data d'inscripció formal llavors es possi :D el numero que toqui
-			sentencia+="Nom varchar(25) NOT NULL,";
-			sentencia+="NIE varchar(10) primarykey,";
-			sentencia+="Telefon varchar(9),";
-			sentencia+="Municipi varchar(25) NOT NULL,";
-			sentencia+="Email varchar(30) unique,";
-			sentencia+="Actiu varchar(5) NOT NULL,";
-			sentencia+="UriImatgePerfil varchar(300),";
-			sentencia+="DataRegistre date Not NULL,";
-			sentencia+="DataInscripcioFormal date Not NULL);";
-			return sentencia;
-		}
-		public static Usuari[] FiltraPerMunicipi(Usuari[] usuaris,string municipi)
+        public bool PotAnarAlMunicipi(string municipi)
+        {
+            return this.Municipi == municipi || this.municipisQueVolAnar.ExisteClave(municipi);
+        }
+        public void TreuMunicipiQuePotAnar(string municipi)
+        {
+            if (municipisQueVolAnar.ExisteClave(municipi))
+            {
+                municipisQueVolAnar.EliminaClave(municipi);
+            }
+        }
+        public MunicipiQueVolAnar AfegirMunicipiQueVolAnar(string municipi)
+        {
+            if (!municipisQueVolAnar.ExisteClave(municipi))
+            {
+                municipisQueVolAnar.Añadir(new MunicipiQueVolAnar(municipi, this));
+                municipisQueVolAnar[municipi].Baixa += (municipiATreure) => { TreuMunicipiQuePotAnar(municipiATreure.PrimaryKey); };
+                municipisQueVolAnar[municipi].Alta += (municipiPosar) => { AfegirMunicipiQueVolAnar(municipiPosar.PrimaryKey); };
+            }
+            return municipisQueVolAnar[municipi];
+        }
+
+       public Servei[] Serveis()
+        {
+            Certificat[] certificats = new Certificat[Certificats.Count];
+            for (int i = 0; i < certificats.Length; i++)
+                certificats[i] = Certificats[i].Certificat;
+            return Certificat.ServeisCertificats(certificats);
+        }
+        public bool ConteServei(Servei servei)
+        {
+            return Serveis().Contains(servei);
+        }
+        public bool ConteServei(IEnumerable<Servei> serveis)
+        {
+            return Serveis().Contains(serveis);
+        }
+        #region Metodes de Clase
+        public static string StringCreateTable()
+        {
+            string sentencia = "create table " + TAULA + "(";
+            sentencia += "NumSoci int,";//fer trigger i secuencia per quan possin la data d'inscripció formal llavors es possi :D el numero que toqui
+            sentencia += "Nom varchar(25) NOT NULL,";
+            sentencia += "NIE varchar(10) primarykey,";
+            sentencia += "Telefon varchar(9),";
+            sentencia += "Municipi varchar(25) NOT NULL,";
+            sentencia += "Email varchar(30) unique,";
+            sentencia += "Actiu varchar(5) NOT NULL,";
+            sentencia += "UriImatgePerfil varchar(300),";
+            sentencia += "DataRegistre date Not NULL,";
+            sentencia += "DataInscripcioFormal date Not NULL);";
+            return sentencia;
+        }
+        /// <summary>
+        /// Filtra els usuaris que viuen al municipi
+        /// </summary>
+        /// <param name="usuaris"></param>
+        /// <param name="municipi"></param>
+        /// <returns></returns>
+        public static Usuari[] FiltraPerMunicipiEstricte(Usuari[] usuaris,string municipi)
 		{
 			return usuaris.Filtra((usuari)=>{return usuari.Municipi==municipi;}).ToTaula();
 		}
-		public static Usuari[] FiltraActius(Usuari[] usuaris)
+        /// <summary>
+        /// Filtra els usuaris que poden anar al municipi
+        /// </summary>
+        /// <param name="usuaris"></param>
+        /// <param name="municipi"></param>
+        /// <returns></returns>
+        public static Usuari[] FiltraPerMunicipi(Usuari[] usuaris, string municipi)
+        {
+            return usuaris.Filtra((usuari) => { return usuari.PotAnarAlMunicipi(municipi); }).ToTaula();
+        }
+        public static Usuari[] FiltraActius(Usuari[] usuaris)
 		{
 			return usuaris.Filtra((usuari)=>{ return usuari.Actiu; }).ToTaula();
 		}
-	}
+
+        public static Usuari[] FiltraServei(IEnumerable<Usuari> usuaris, Servei serveis)
+        {
+            return FiltraServei(usuaris, new Servei[] { serveis });
+        }
+
+        public static Usuari[] FiltraServei(IEnumerable<Usuari> usuaris,IEnumerable<Servei> serveis)
+        {
+            List<Usuari> usuarisQueFanElServei = new List<Usuari>();
+            foreach (Usuari usuari in usuaris)
+                if (usuari.ConteServei(serveis))
+                    usuarisQueFanElServei.Add(usuari);
+            return usuarisQueFanElServei.ToTaula();
+        }
+        #endregion
+
+    }
+    public class MunicipiQueVolAnar : ObjecteSqlIdAuto,IClauUnicaPerObjecte
+    {
+        public const string TAULA = "MunicipisQueVolenAnar";
+        string municipi;
+        Usuari usuari;
+
+        public MunicipiQueVolAnar(string municipi, Usuari usuari):base(TAULA,"","Id")
+        {
+            AltaCanvi("Municipi");
+            AltaCanvi("Usuari");
+            this.municipi = municipi;
+            this.usuari = usuari;
+        }
+
+        public string Municipi
+        {
+            get
+            {
+                return municipi;
+            }
+
+            set
+            {
+                municipi = value;
+                CanviString("Municipi", municipi);
+            }
+        }
+
+        public Usuari Usuari
+        {
+            get
+            {
+                return usuari;
+            }
+
+            set
+            {
+                usuari = value;
+                CanviString("UsuariId", usuari.PrimaryKey);
+            }
+        }
+
+        public override string StringInsertSql(TipusBaseDeDades tipusBD)
+        {
+            return "insert into " + TAULA + " values('" + Usuari.PrimaryKey + "','" + Municipi + "');";
+        }
+        public static string StringCreateTable()
+        {
+            string createString = "create table " + TAULA + " (";
+            createString+= "Id int NOT NULL AUTO_INCREMENT,";//como ObjetoSql no puede tener campos primaryKey compuestos pues tiene que tener este campo
+            createString += "UsuariId varchar(10) not null references Usuaris(NIE),";
+            createString += "Municipi varchar(25) not null, CONSTRAINT contraintUnique UNIQUE(UsuariId,Municipi) );";
+            return createString;
+        }
+
+        public IComparable Clau()
+        {
+            return municipi;
+        }
+    }
 }

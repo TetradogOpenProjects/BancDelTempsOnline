@@ -43,7 +43,7 @@ namespace BancDelTempsOnline
 		}
 		const double TEMPSPERRENOVARIP = 3 * 60 * 60 * 1000;//3 hores
 		const int INTENTSCLIENTPERSERPERILLOS = 1000;
-		static readonly stirng urlPaginaFitxers;
+		static readonly string urlPaginaFitxers;
 		ServidorHttpSeguro servidor;
 		string paginaLogin;
 		string paginaRegistre;
@@ -142,7 +142,7 @@ namespace BancDelTempsOnline
 		string ClientAmbLogin(ClienteServidorHttpSeguro cliente)
 		{
 			Usuari usuari;
-			string paginaHaEntregar;
+			string paginaHaEntregar="";
 			usuari = cliente.Tag as Usuari;
 			//atenc a la petició
 			if (usuari != null) {

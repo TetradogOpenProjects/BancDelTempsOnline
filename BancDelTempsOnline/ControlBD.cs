@@ -25,14 +25,14 @@ namespace BancDelTempsOnline
         //falte taulaUsuarisOfertats//es una taula on surten els usuaris proposats per una oferta
         //falte taula objectesOfertats
         //falte taulaObjectesPrestats
-        
+
         //estaria be que les opcions estigesisn al sql??per poder afegir,treure,canviar desde el navegador la propia pagina web??
         //aixi es poden fer canvis sense aturar el servei i ho pot fer un admin mateix :D
         //fer variables que representin els camps de l'usuari aixi es un model per reemplaçar els camps pels que toquin
-        
+
         //si canvia l'email s'ha de donar de baixa el permis de googleplus l'anterior
         //taula missatges usuariEmissor,usuariReceptor,Misstage
-		static string[] creates={Usuari.StringCreateTable(),Certificat.StringCreateTable(),Servei.StringCreateTable(),CertificatUsuari.StringCreateTable(),ServeiCertificat.StringCreateTable(),ServeiUsuari.StringCreateTable()};
+        static string[] creates = { Usuari.StringCreateTable(), Certificat.StringCreateTable(), Servei.StringCreateTable(), CertificatUsuari.StringCreateTable(), ServeiCertificat.StringCreateTable(), ServeiUsuari.StringCreateTable(), MunicipiQueVolAnar.StringCreateTable() };
 		public ControlBD(BaseDeDades baseDeDades):base(baseDeDades,creates)
 		{
 		}
@@ -42,7 +42,7 @@ namespace BancDelTempsOnline
 
 		public override void Restaurar()
 		{
-         
+            string[,] tablaUsuaris = BaseDeDades.ConsultaTableDirect(Usuari.Taula);
 		}
 
 		#endregion

@@ -15,13 +15,14 @@ namespace BancDelTempsOnline
 	/// <summary>
 	/// Description of Servei.
 	/// </summary>
-	public class Servei:ObjecteSqlIdAuto,IClauUnicaPerObjecte,IComparable<Servei>
+	public class Servei:ObjecteSqlIdAuto,IClauUnicaPerObjecte,IComparable<Servei>,IComparable
 	{
-		const string NOMTAULA="Serveis";
+        public const string TAULA="Serveis";
 		string nom;
 		string uriImatge;
 		string descripció;
-		public Servei(string nom,string uriImatge,string descripció):base(NOMTAULA,"","Id")
+        string localIdUnic;
+		public Servei(string nom,string uriImatge,string descripció):base(TAULA,"","Id")
 		{
 			AltaCanvi("Nom");
 			AltaCanvi("UriImatge");
@@ -29,8 +30,9 @@ namespace BancDelTempsOnline
 			Nom=nom;
 			UriImatge=uriImatge;
 			Descripció=descripció;
-			
-		}
+            localIdUnic = DateTime.Now.Ticks+" "+MiRandom.Next();//es per us local no es desa a la BD
+
+        }
 		public string Nom {
 			get{ return nom; }
 			set{ nom = value;
@@ -65,7 +67,7 @@ namespace BancDelTempsOnline
 
 		public IComparable Clau()
 		{
-			return nom;
+			return localIdUnic;
 		}
 
 		#endregion
@@ -80,20 +82,24 @@ namespace BancDelTempsOnline
 		#endregion
 		public static string StringCreateTable()
 		{
-			string sentencia="create table "+NOMTAULA+" (";
+			string sentencia="create table "+TAULA+" (";
 			sentencia+="Nom varchar(25) NOT NULL,";
 			sentencia+="UriImatge varchar(250),";
 			sentencia+="Descripcio varchar(200));";
 			return sentencia;
 		}
 
-	}
+        public int CompareTo(object obj)
+        {
+            return CompareTo(obj as Servei);
+        }
+    }
 	public class ServeiUsuari:ObjecteSqlIdAuto
 	{
-		const string NOMTAULA="ServeisUsuari";
+        public const string TAULA="ServeisUsuari";
 		Servei servei;
 		Usuari usuari;
-		public ServeiUsuari(Servei servei,Usuari usuari):base(NOMTAULA,"","Id")
+		public ServeiUsuari(Servei servei,Usuari usuari):base(TAULA,"","Id")
 		{
 			AltaCanvi("Servei");
 			AltaCanvi("Usuari");
@@ -135,7 +141,7 @@ namespace BancDelTempsOnline
 		#endregion
 		public static string StringCreateTable()
 		{
-			string sentencia="create table "+NOMTAULA+"(";
+			string sentencia="create table "+TAULA+"(";
 			sentencia+="Id int NOT NULL AUTO_INCREMENT,";
 			sentencia+="ServeiId int NOT NULL references Serveis(Id),";
 			sentencia+="UsuariId varchar(10) NOT NULL references Usuaris(NIE));";

@@ -15,16 +15,20 @@ namespace BancDelTempsOnline
 	/// <summary>
 	/// Description of Certificat.
 	/// </summary>
-	public class Certificat:ObjecteSqlIdAuto
+	public class Certificat:ObjecteSqlIdAuto,IClauUnicaPerObjecte
 	{
-		const string NOMTAULA="Certificats";
+		public const string NOMTAULA="Certificats";
+        string localIdUnic;
 		string nom;
+        ListaUnica<ServeiCertificat> serveis;
 		public Certificat(string nom)
 			: base(NOMTAULA, "", "Id")
 		{
 			AltaCanvi("Nom");
 			this.nom = nom;
-		}
+            serveis = new ListaUnica<ServeiCertificat>();
+            localIdUnic = DateTime.Now.Ticks+" " + MiRandom.Next();//es per us local no es desa a la BD
+        }
 
 		public string Nom {
 			get {
@@ -35,6 +39,10 @@ namespace BancDelTempsOnline
 				CanviString("Nom", nom);
 			}
 		}
+        public ListaUnica<ServeiCertificat> Serveis
+        {
+            get { return serveis; }
+        }
 
 		#region implemented abstract members of ObjecteSql
 
@@ -50,9 +58,24 @@ namespace BancDelTempsOnline
 		{
 			return "create table "+NOMTAULA+"(Id int NOT NULL AUTO_INCREMENT,Nom varchar(200) Not null);";
 		}
+        public static Servei[] ServeisCertificats(IEnumerable<Certificat> certificats)
+        {
+            ListaUnica<Servei> serveis = new ListaUnica<Servei>();
+            foreach(Certificat certificat in certificats)
+            {
+                for (int i = 0; i < certificat.Serveis.Count; i++)
+                    if (!serveis.Existe(certificat.Serveis[i].Servei))
+                        serveis.Añadir(certificat.Serveis[i].Servei);
+            }
+            return serveis.ToTaula();
+        }
 
-	}
-	public class ServeiCertificat:ObjecteSqlIdAuto
+        public IComparable Clau()
+        {
+            return localIdUnic;
+        }
+    }
+	public class ServeiCertificat:ObjecteSqlIdAuto,IClauUnicaPerObjecte
 	{
 		const string NOMTAULA="ServeisCertificat";
 		Certificat certificat;
@@ -101,8 +124,13 @@ namespace BancDelTempsOnline
 			sentencia+="ServeiId int NOT NULL references Serveis(Id));";
 			return sentencia;
 		}
-	}
-	public class CertificatUsuari:ObjecteSqlIdAuto
+
+        public IComparable Clau()
+        {
+            return servei.Clau();
+        }
+    }
+	public class CertificatUsuari:ObjecteSqlIdAuto,IClauUnicaPerObjecte
 	{
 		const string NOMTAULA="CertificatsUsuari";
 		Certificat certificat;
@@ -151,5 +179,10 @@ namespace BancDelTempsOnline
 			sentencia+="UsuariId varchar(10) NOT NULL references Usuaris(NIE));";
 			return sentencia;
 		}
-	}
+
+        public IComparable Clau()
+        {
+            return certificat.Clau();
+        }
+    }
 }

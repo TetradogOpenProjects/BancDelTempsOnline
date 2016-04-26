@@ -33,16 +33,17 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Gabriel.Cat.BaseDeDades">
-      <HintPath>D:\Documentos\SharpDevelop Projects\Gabriel.Cat.BaseDeDades\bin\Release\Gabriel.Cat.BaseDeDades.dll</HintPath>
+      <HintPath>..\..\Gabriel.Cat.BaseDeDades\bin\Release\Gabriel.Cat.BaseDeDades.dll</HintPath>
     </Reference>
     <Reference Include="Gabriel.Cat.Google">
-      <HintPath>D:\Documentos\Visual Studio 2012\Projects\Gabriel.Cat.Google\bin\Release\Gabriel.Cat.Google.dll</HintPath>
+      <HintPath>..\..\Gabriel.Cat.Google\bin\Release\Gabriel.Cat.Google.dll</HintPath>
     </Reference>
-    <Reference Include="Gabriel.Cat.Utilitats">
+    <Reference Include="Gabriel.Cat.Utilitats, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\Gabriel.Cat.Utilitats\Gabriel.Cat.Utilitats\bin\Release\Gabriel.Cat.Utilitats.dll</HintPath>
     </Reference>
     <Reference Include="Gabriel.Cat.Wpf">
-      <HintPath>D:\Documentos\SharpDevelop Projects\Gabriel.Cat.Wpf\Gabriel.Cat.Wpf\bin\Release\Gabriel.Cat.Wpf.dll</HintPath>
+      <HintPath>..\..\Gabriel.Cat.Wpf\Gabriel.Cat.Wpf\bin\Release\Gabriel.Cat.Wpf.dll</HintPath>
     </Reference>
     <Reference Include="Gabriel.Cat.Xarxa">
       <HintPath>..\..\Gabriel.Cat.Xarxa\bin\Release\Gabriel.Cat.Xarxa.dll</HintPath>
