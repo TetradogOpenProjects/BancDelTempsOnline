@@ -42,7 +42,7 @@ namespace BancDelTempsOnline
 
 		public override void Restaurar()
 		{
-            string[,] tablaUsuaris = BaseDeDades.ConsultaTableDirect(Usuari.Taula);
+            string[,] tablaUsuaris = BaseDeDades.ConsultaTableDirect(Usuari.TAULA);
 		}
 
 		#endregion
