@@ -17,6 +17,10 @@ namespace BancDelTempsOnline
 	/// </summary>
 	public class Usuari:ObjecteSql,IClauUnicaPerObjecte
 	{
+        enum CampsUsuari
+        {
+            NumSoci, Nom, NIE, Telefon, Municipi, Email, Actiu, UriImatgePerfil, DataRegistre, DataInscripcioFormal
+        }
 		const int SOCIPENDENT = -1;
 		public const string TAULA="usuaris";
         //atributs clase
@@ -33,6 +37,7 @@ namespace BancDelTempsOnline
 		DateTime dataRegistre;
         ListaUnica<CertificatUsuari> certificats = new ListaUnica<CertificatUsuari>();
         ListaUnica<MunicipiQueVolAnar> municipisQueVolAnar;//es una llista de municipis on l'usuari pot anar
+        ListaUnica<ServeiUsuari> serveisSenseCertificat;
 		//usuari donat d'alta
 		public Usuari(int numSoci,string nom,string uriImatgePerfil,string municipi,string nie,string telefon,string email,bool actiu,DateTime dataInscripcioFormal,DateTime dataRegistre)
 			:base(TAULA,nie,"NIE")
@@ -58,6 +63,8 @@ namespace BancDelTempsOnline
 			this.dataInscripcioFormal=dataInscripcioFormal;
 			this.dataRegistre=dataRegistre;
             municipisQueVolAnar = new ListaUnica<MunicipiQueVolAnar>();
+            certificats = new ListaUnica<CertificatUsuari>();
+            serveisSenseCertificat = new ListaUnica<ServeiUsuari>();
 		}
 		//usuari registrat sense donar d'alta: per tant no esta activat ni te una data d'inscripcio formal!
 		public Usuari(string nom,string uriImatgePerfil,string municipi,string nie,string telefon,string email,DateTime dataRegistre)
@@ -70,7 +77,11 @@ namespace BancDelTempsOnline
         {
             get { return certificats; }
         }
-		public int NumSoci {
+        public ListaUnica<ServeiUsuari> ServeisSenseCertificat
+        {
+            get { return serveisSenseCertificat; }
+        }
+        public int NumSoci {
 			get{ return numSoci; }
 			set{ numSoci = value;
 				CanviNumero("NumSoci",NumSoci+"");
@@ -199,8 +210,12 @@ namespace BancDelTempsOnline
             }
             return municipisQueVolAnar[municipi];
         }
-
-       public Servei[] Serveis()
+        public void AfegirMunicipiQueVolAnar(MunicipiQueVolAnar municipiQueVolAnar)
+        {
+            if (!municipisQueVolAnar.ExisteObjeto(municipiQueVolAnar))
+                municipisQueVolAnar.Añadir(municipiQueVolAnar);
+        }
+        public Servei[] Serveis()
         {
             Certificat[] certificats = new Certificat[Certificats.Count];
             for (int i = 0; i < certificats.Length; i++)
@@ -228,8 +243,15 @@ namespace BancDelTempsOnline
             sentencia += "Actiu varchar(5) NOT NULL,";
             sentencia += "UriImatgePerfil varchar(300),";
             sentencia += "DataRegistre date Not NULL,";
-            sentencia += "DataInscripcioFormal date Not NULL);";
+            sentencia += "DataInscripcioFormal date Not NULL);"; 
             return sentencia;
+        }
+        public static Usuari[] TaulaToUsuariArray(string[,] taulaUsuaris)
+        {
+            Usuari[] usuaris = new Usuari[taulaUsuaris.GetLength(DimensionMatriz.Fila)];
+            for (int i = 0; i < usuaris.Length; i++)
+                usuaris[i] = new Usuari(Convert.ToInt32(taulaUsuaris[(int)CampsUsuari.NumSoci, i]), taulaUsuaris[(int)CampsUsuari.Nom, i], taulaUsuaris[(int)CampsUsuari.UriImatgePerfil, i], taulaUsuaris[(int)CampsUsuari.Municipi, i], taulaUsuaris[(int)CampsUsuari.NIE, i], taulaUsuaris[(int)CampsUsuari.Telefon, i], taulaUsuaris[(int)CampsUsuari.Email, i], Convert.ToBoolean(taulaUsuaris[(int)CampsUsuari.Actiu, i]), ObjecteSql.StringToDateTime(taulaUsuaris[(int)CampsUsuari.DataRegistre, i]), ObjecteSql.StringToDateTime(taulaUsuaris[(int)CampsUsuari.DataInscripcioFormal, i]));
+            return usuaris;
         }
         /// <summary>
         /// Filtra els usuaris que viuen al municipi
@@ -269,11 +291,17 @@ namespace BancDelTempsOnline
                     usuarisQueFanElServei.Add(usuari);
             return usuarisQueFanElServei.ToTaula();
         }
+
+
         #endregion
 
     }
     public class MunicipiQueVolAnar : ObjecteSqlIdAuto,IClauUnicaPerObjecte
     {
+        enum CampsMunicipiQueVolAnar
+        {
+          Id,UsuariNIE, NomMunicipi
+        }
         public const string TAULA = "MunicipisQueVolenAnar";
         string municipi;
         Usuari usuari;
@@ -330,6 +358,22 @@ namespace BancDelTempsOnline
         public IComparable Clau()
         {
             return municipi;
+        }
+        /// <summary>
+        /// Carrega i linka els municipis als usuaris
+        /// </summary>
+        /// <param name="taulaMunicipisQueVolAnar"></param>
+        /// <param name="usuarisList"></param>
+        /// <returns></returns>
+        public static MunicipiQueVolAnar[] TaulaToMunicipisQueVolAnar(string[,] taulaMunicipisQueVolAnar, LlistaOrdenada<string, Usuari> usuarisList)
+        {
+            MunicipiQueVolAnar[] municipisQueVolenAnar = new MunicipiQueVolAnar[taulaMunicipisQueVolAnar.GetLength(DimensionMatriz.Fila)];
+           for(int i=0;i<municipisQueVolenAnar.Length;i++)
+            {
+                municipisQueVolenAnar[i] = new MunicipiQueVolAnar(taulaMunicipisQueVolAnar[(int)CampsMunicipiQueVolAnar.NomMunicipi, i], usuarisList[taulaMunicipisQueVolAnar[(int)CampsMunicipiQueVolAnar.UsuariNIE, i]]) { PrimaryKey = taulaMunicipisQueVolAnar[(int)CampsMunicipiQueVolAnar.Id, i] };
+                municipisQueVolenAnar[i].Usuari.AfegirMunicipiQueVolAnar(municipisQueVolenAnar[i]);
+            }
+            return municipisQueVolenAnar;
         }
     }
 }

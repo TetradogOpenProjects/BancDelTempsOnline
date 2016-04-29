@@ -8,6 +8,7 @@
  */
 using System;
 using Gabriel.Cat;
+using Gabriel.Cat.Extension;
 
 namespace BancDelTempsOnline
 {
@@ -42,8 +43,44 @@ namespace BancDelTempsOnline
 
 		public override void Restaurar()
 		{
-            string[,] tablaUsuaris = BaseDeDades.ConsultaTableDirect(Usuari.TAULA);
-		}
+
+            Usuari[] usuaris;
+            CertificatUsuari[] certificatsUsuari;
+            ServeiCertificat[] serveisCertificat;
+            ServeiUsuari[] serveisUsuaris ;
+            MunicipiQueVolAnar[] municipisQueVolAnar;
+            Certificat[] certificats;
+            Servei[] serveis;
+            LlistaOrdenada<string, Certificat> certificatsList;
+            LlistaOrdenada<string, Servei> serveisList = new LlistaOrdenada<string, Servei>();
+            LlistaOrdenada<string, Usuari> usuarisList = new LlistaOrdenada<string, Usuari>();
+
+            usuaris = Usuari.TaulaToUsuariArray(BaseDeDades.ConsultaTableDirect(Usuari.TAULA));
+            for (int i = 0; i < usuaris.Length; i++)
+                usuarisList.Afegir(usuaris[i].NIE, usuaris[i]);
+
+            certificats = Certificat.TaulaToCertificatsArray(BaseDeDades.ConsultaTableDirect(Certificat.TAULA));
+            serveis = Servei.TaulaToServeisArray(BaseDeDades.ConsultaTableDirect(Servei.TAULA));
+             certificatsList = new LlistaOrdenada<string, Certificat>();
+            for (int i = 0; i < certificats.Length; i++)
+                certificatsList.Afegir(certificats[i].Nom, certificats[i]);
+            for (int i = 0; i < serveis.Length; i++)
+                serveisList.Afegir(serveis[i].Nom, serveis[i]);
+            certificatsUsuari = CertificatUsuari.TaulaToServeisUsuarisArray(BaseDeDades.ConsultaTableDirect(CertificatUsuari.TAULA),usuarisList,certificatsList);
+            serveisCertificat =  ServeiCertificat.TaulaToServeisCertificatsArray(BaseDeDades.ConsultaTableDirect(ServeiCertificat.TAULA),serveisList,certificatsList);
+            serveisUsuaris =  ServeiUsuari.TaulaToServeisUsuarisArray(BaseDeDades.ConsultaTableDirect(ServeiUsuari.TAULA),serveisList,usuarisList);
+            municipisQueVolAnar =  MunicipiQueVolAnar.TaulaToMunicipisQueVolAnar(BaseDeDades.ConsultaTableDirect(MunicipiQueVolAnar.TAULA),usuarisList);
+            //falta la part dels permisos i de la web
+            //poso els objectes a la base de dades
+            base.Afegir(usuaris);
+            base.Afegir(certificats);
+            base.Afegir(certificatsUsuari);
+            base.Afegir(serveisCertificat);
+            base.Afegir(serveisUsuaris);
+            base.Afegir(municipisQueVolAnar);
+            base.Afegir(serveis);
+            //falta afegir part de permisos i web
+        }
 
 		#endregion
 	}
