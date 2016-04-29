@@ -41,7 +41,7 @@ namespace BancDelTempsOnline
 
 		#region implemented abstract members of ControlObjectesSql
 
-		public override void Restaurar()
+		protected override void Restaurar()
 		{
 
             Usuari[] usuaris;
