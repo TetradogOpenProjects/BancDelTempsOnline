@@ -24,7 +24,7 @@ namespace BancDelTempsOnline
 		const int SOCIPENDENT = -1;
 		public const string TAULA="usuaris";
         public const string CAMPPRIMARYKEY = "NIE";
-        private const int TAMANYIMATGEPERFIL = 250 * 1024;//un 250KB
+        public const int TAMANYIMATGEPERFIL = 250 * 1024;//un 250KB
         private const int TAMANYNOM = 25;
         private const int TAMANYNUMTELEFON = 9;
         private const int TAMANYEMAIL = 30;
@@ -44,6 +44,20 @@ namespace BancDelTempsOnline
         ListaUnica<ServeiUsuari> serveisSenseCertificat;
         Usuari quiHoVaFormalitzar;
 		//usuari donat d'alta
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="numSoci"></param>
+        /// <param name="nom"></param>
+        /// <param name="imatgePerfil">string formada dels bytes de la imatge en format JPG</param>
+        /// <param name="municipi"></param>
+        /// <param name="nie"></param>
+        /// <param name="telefon"></param>
+        /// <param name="email"></param>
+        /// <param name="actiu"></param>
+        /// <param name="dataInscripcioFormal"></param>
+        /// <param name="dataRegistre"></param>
+        /// <param name="quiHoVaFormalitzar"></param>
 		public Usuari(int numSoci,string nom,string imatgePerfil,string municipi,string nie,string telefon,string email,bool actiu,DateTime dataInscripcioFormal,DateTime dataRegistre,Usuari quiHoVaFormalitzar)
 			:base(TAULA,nie,CAMPPRIMARYKEY)
 		{
@@ -103,6 +117,9 @@ namespace BancDelTempsOnline
 				CanviString(CampsUsuari.Nom.ToString(), nom);
 			}
 		}
+        /// <summary>
+        /// string formada dels bytes de la imatge en format JPG
+        /// </summary>
 		public string ImatgePerfil {
 			get{ return imatgePerfil; }
 			set{

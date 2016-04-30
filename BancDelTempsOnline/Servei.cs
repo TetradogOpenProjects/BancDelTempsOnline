@@ -29,7 +29,13 @@ namespace BancDelTempsOnline
         Usuari quiHoVaAfegir;
         private const int TAMANYIMATGE=64*1024;//64KB
         private const int TAMANYDESCRIPCIO = 200;
-
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="nom"></param>
+        /// <param name="imatge">string formada dels bytes de la imatge en format JPG</param>
+        /// <param name="descripció"></param>
+        /// <param name="quiHoVaAfegir"></param>
         public Servei(string nom, string imatge, string descripció, Usuari quiHoVaAfegir) : this("", nom, imatge, descripció, quiHoVaAfegir) { }
 		private Servei(string id,string nom,string imatge,string descripció,Usuari quiHoVaAfegir):base(TAULA,id,CampsServei.Id.ToString())
 		{
@@ -57,7 +63,7 @@ namespace BancDelTempsOnline
 			}
 		}
         /// <summary>
-        /// Cadena que representa una imatge en bytes no superior al maxim
+        /// Cadena que representa una imatge en bytes en format JPG no superior al maxim
         /// </summary>
 		public string Imatge {
 			get{ return imatge; }

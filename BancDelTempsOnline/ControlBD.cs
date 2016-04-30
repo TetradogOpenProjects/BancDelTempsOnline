@@ -19,13 +19,12 @@ namespace BancDelTempsOnline
 	{
         //faltan opcions,permisos
         //falta  banners per prohibir opcions
-        //falten triggers
         //falten taulesHistorial de cada taula
         //falte taulaInterCanvis
         //falte  taulaOfertes
         //falte taulaUsuarisOfertats//es una taula on surten els usuaris proposats per una oferta
-        //falte taula objectesOfertats
-        //falte taulaObjectesPrestats
+        //falte taula objectesOfertatsPrestats
+
 
         //estaria be que les opcions estigesisn al sql??per poder afegir,treure,canviar desde el navegador la propia pagina web??
         //aixi es poden fer canvis sense aturar el servei i ho pot fer un admin mateix :D
