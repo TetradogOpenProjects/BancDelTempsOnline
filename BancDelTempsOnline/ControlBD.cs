@@ -17,14 +17,15 @@ namespace BancDelTempsOnline
 	/// </summary>
 	public class ControlBD:ControlObjectesSql
 	{
-        //faltan opcions,permisos
+        //faltan opcions,part htmlMenu,part htmlCosOpcio,PermisMinim
         //falta  banners per prohibir opcions
+        
         //falten taulesHistorial de cada taula
         //falte taulaInterCanvis
         //falte  taulaOfertes
         //falte taulaUsuarisOfertats//es una taula on surten els usuaris proposats per una oferta
         //falte taula objectesOfertatsPrestats
-
+        //falte taula tallers!!
 
         //estaria be que les opcions estigesisn al sql??per poder afegir,treure,canviar desde el navegador la propia pagina web??
         //aixi es poden fer canvis sense aturar el servei i ho pot fer un admin mateix :D
@@ -32,7 +33,8 @@ namespace BancDelTempsOnline
 
         //si canvia l'email s'ha de donar de baixa el permis de googleplus l'anterior
         //taula missatges usuariEmissor,usuariReceptor,Misstage
-        static string[] creates = { Usuari.StringCreateTable(), Certificat.StringCreateTable(), Servei.StringCreateTable(), CertificatUsuari.StringCreateTable(), ServeiCertificat.StringCreateTable(), ServeiUsuari.StringCreateTable(), MunicipiQueVolAnar.StringCreateTable() };
+       
+        static string[] creates = { Usuari.StringCreateTable(), Certificat.StringCreateTable(), Servei.StringCreateTable(), CertificatUsuari.StringCreateTable(), ServeiCertificat.StringCreateTable(), ServeiUsuari.StringCreateTable(), MunicipiQueVolAnar.StringCreateTable(),Missatge.StringCreateTable() };
 		public ControlBD(BaseDeDades baseDeDades):base(baseDeDades,creates)
 		{
 		}
@@ -42,7 +44,7 @@ namespace BancDelTempsOnline
 
 		protected override void Restaurar()
 		{
-
+            Missatge[] missatges;
             Usuari[] usuaris;
             CertificatUsuari[] certificatsUsuari;
             ServeiCertificat[] serveisCertificat;
@@ -69,8 +71,10 @@ namespace BancDelTempsOnline
             serveisCertificat =  ServeiCertificat.TaulaToServeisCertificatsArray(BaseDeDades.ConsultaTableDirect(ServeiCertificat.TAULA),usuarisList,serveisList,certificatsList);
             serveisUsuaris =  ServeiUsuari.TaulaToServeisUsuarisArray(BaseDeDades.ConsultaTableDirect(ServeiUsuari.TAULA),serveisList,usuarisList);
             municipisQueVolAnar =  MunicipiQueVolAnar.TaulaToMunicipisQueVolAnar(BaseDeDades.ConsultaTableDirect(MunicipiQueVolAnar.TAULA),usuarisList);
+            missatges = Missatge.TaulaToMissatges(BaseDeDades.ConsultaTableDirect(Missatge.TAULA), usuarisList);
             //falta la part dels permisos i de la web
             //poso els objectes a la base de dades
+            base.Afegir(missatges);
             base.Afegir(usuaris);
             base.Afegir(certificats);
             base.Afegir(certificatsUsuari);

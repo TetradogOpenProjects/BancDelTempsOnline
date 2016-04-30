@@ -88,7 +88,7 @@ namespace BancDelTempsOnline
 		#endregion
 		public static string StringCreateTable()
 		{
-			return "create table "+TAULA+"("+CampsCertificat.Nom.ToString()+ " varchar("+MAXLONGITUDNOM+") PrimaryKey,"+CampsCertificat.QuiHoVaAfegirId.ToString()+" varchar(10) references "+Usuari.TAULA+"(NIE));";
+			return "create table "+TAULA+"("+CampsCertificat.Nom.ToString()+ " varchar("+MAXLONGITUDNOM+") PrimaryKey,"+CampsCertificat.QuiHoVaAfegirId.ToString()+" varchar(10) references "+Usuari.TAULA+"("+Usuari.CAMPPRIMARYKEY+"));";
 		}
         public static Servei[] ServeisCertificats(IEnumerable<Certificat> certificats)
         {
@@ -174,7 +174,7 @@ namespace BancDelTempsOnline
 		#region implemented abstract members of ObjecteSql
 		public override string StringInsertSql(TipusBaseDeDades tipusBD)
 		{
-			string sentencia = "insert into " + Taula + " value(";
+			string sentencia = "insert into " + Taula + "("+CampsServeiCertificat.CertificatId.ToString() + "," + CampsServeiCertificat.ServeiId.ToString() + ","+CampsServeiCertificat.QuiHoVaAfegir.ToString()+") values(";
 			sentencia += "" + Certificat.PrimaryKey + ",";
 			sentencia += "" + Servei.PrimaryKey + ",";
             sentencia += "'" + QuiHoVaAfegir.PrimaryKey + "');";
@@ -214,27 +214,27 @@ namespace BancDelTempsOnline
 	public class CertificatUsuari:ObjecteSqlIdAuto,IClauUnicaPerObjecte
 	{
         enum CampsCertificatUsuari
-        { CertificatNom, UsuariId,QuiHoVaComprobarId,Activat}
+        { Id,CertificatId, UsuariId,QuiHoVaComprobarId,Activat}
 		public const string TAULA="CertificatsUsuari";
+        public const string CAMPPRIMARYKEY = "Id";
 		Certificat certificat;
 		Usuari usuari;
         bool actiu;
         Usuari quiHoVaActivar;
-		public CertificatUsuari(Certificat certificat, Usuari usuari)
-			: base(TAULA, "", "Id")
+
+        public CertificatUsuari(Certificat certificat, Usuari usuari) : this("", certificat, usuari,false,null) { }
+        private CertificatUsuari(string id,Certificat certificat, Usuari usuari, bool activat, Usuari quiHoVaActivar)
+            : base(TAULA,id, CAMPPRIMARYKEY)
 		{
-			AltaCanvi("CertificatId");
-			AltaCanvi("UsuariId");
-            AltaCanvi("Actiu");
-            AltaCanvi("QuiHoVaComprobarId");
+			AltaCanvi(CampsCertificatUsuari.CertificatId.ToString());
+			AltaCanvi(CampsCertificatUsuari.UsuariId.ToString());
+            AltaCanvi(CampsCertificatUsuari.Activat.ToString());
+            AltaCanvi(CampsCertificatUsuari.QuiHoVaComprobarId.ToString());
 			this.certificat = certificat;
 			this.usuari = usuari;
-		}
-        public CertificatUsuari(Certificat certificat, Usuari usuari,bool activat,Usuari quiHoVaActivar):this(certificat,usuari)
-        {
             this.actiu = activat;
             this.quiHoVaActivar = quiHoVaActivar;
-        }
+		}
 
         public Certificat Certificat {
 			get {
@@ -286,7 +286,7 @@ namespace BancDelTempsOnline
                 quiHoVaActivar = value;
                 if (quiHoVaActivar != null)
                 {
-                    CanviString("QuiHoVaComprobarId", quiHoVaActivar.NIE);
+                    CanviString("QuiHoVaComprobarId", quiHoVaActivar.PrimaryKey);
                 }
                 else
                 {
@@ -304,18 +304,18 @@ namespace BancDelTempsOnline
 
 		public override string StringInsertSql(TipusBaseDeDades tipusBD)
 		{
-			return "insert into " + Taula + "(CertificatId,UsuariId) values(" + certificat.PrimaryKey + "," + usuari.PrimaryKey + ");";
+			return "insert into " + Taula + "(" + CampsCertificatUsuari.CertificatId.ToString() + "," + CampsCertificatUsuari.UsuariId.ToString() + "," + CampsCertificatUsuari.QuiHoVaComprobarId.ToString() + "," + CampsCertificatUsuari.Activat.ToString()+") values(" + certificat.PrimaryKey + ",'" + usuari.PrimaryKey + "','"+quiHoVaActivar.PrimaryKey+"','"+Actiu.ToString()+"');";
 		}
 
 		#endregion
 		public static string StringCreateTable()
 		{
 			string sentencia="create table "+TAULA+"(";
-			sentencia+="Id int NOT NULL AUTO_INCREMENT,";
-			sentencia+="CertificatId int NOT NULL references Certificats(Id),";
-			sentencia+="UsuariId varchar(10) NOT NULL references Usuaris(NIE),";
-            sentencia += "QuiHoVaCertificarId varchar(10) references Usuaris(NIE),";
-            sentencia += "Actiu varchar(5));";
+			sentencia+= CampsCertificatUsuari.Id.ToString()+" int NOT NULL AUTO_INCREMENT,";
+			sentencia+= CampsCertificatUsuari.CertificatId.ToString() + " int NOT NULL references "+Certificat.TAULA+"("+Certificat.CAMPPRIMARYKEY+"),";
+			sentencia+= CampsCertificatUsuari.UsuariId.ToString() + " varchar(10) NOT NULL references " + Usuari.TAULA + "(" + Usuari.CAMPPRIMARYKEY + "),";
+            sentencia += CampsCertificatUsuari.QuiHoVaComprobarId.ToString() + " varchar(10) references " + Usuari.TAULA + "(" + Usuari.CAMPPRIMARYKEY + "),";
+            sentencia += CampsCertificatUsuari.Activat.ToString() + " varchar(5));";
 			return sentencia;
 		}
         public static CertificatUsuari[] TaulaToServeisUsuarisArray(string[,] taulaCertificatUsuari,LlistaOrdenada<string,Usuari> usuaris, LlistaOrdenada<string, Certificat> certificats)
@@ -323,7 +323,7 @@ namespace BancDelTempsOnline
             CertificatUsuari[] certificatsUsuari = new CertificatUsuari[taulaCertificatUsuari.GetLength(DimensionMatriz.Fila)];
             for (int i = 0; i < certificatsUsuari.Length; i++)
             {
-                certificatsUsuari[i] = new CertificatUsuari(certificats[taulaCertificatUsuari[(int)CampsCertificatUsuari.CertificatNom, i]], usuaris[taulaCertificatUsuari[(int)CampsCertificatUsuari.UsuariId, i]],Convert.ToBoolean(taulaCertificatUsuari[(int)CampsCertificatUsuari.Activat, i]), usuaris[taulaCertificatUsuari[(int)CampsCertificatUsuari.QuiHoVaComprobarId, i]]);
+                certificatsUsuari[i] = new CertificatUsuari(taulaCertificatUsuari[(int)CampsCertificatUsuari.Id, i], certificats[taulaCertificatUsuari[(int)CampsCertificatUsuari.CertificatId, i]], usuaris[taulaCertificatUsuari[(int)CampsCertificatUsuari.UsuariId, i]],Convert.ToBoolean(taulaCertificatUsuari[(int)CampsCertificatUsuari.Activat, i]), usuaris[taulaCertificatUsuari[(int)CampsCertificatUsuari.QuiHoVaComprobarId, i]]);
 
             }
                 return certificatsUsuari;

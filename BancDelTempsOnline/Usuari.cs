@@ -61,6 +61,7 @@ namespace BancDelTempsOnline
 		public Usuari(int numSoci,string nom,string imatgePerfil,string municipi,string nie,string telefon,string email,bool actiu,DateTime dataInscripcioFormal,DateTime dataRegistre,Usuari quiHoVaFormalitzar)
 			:base(TAULA,nie,CAMPPRIMARYKEY)
 		{
+           
             if (String.IsNullOrEmpty(nom) || String.IsNullOrEmpty(municipi) || String.IsNullOrEmpty(nie) || String.IsNullOrEmpty(email))
                 throw new NullReferenceException();
 			base.AltaCanvi(CampsUsuari.NumSoci.ToString());

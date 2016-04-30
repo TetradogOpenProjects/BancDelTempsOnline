@@ -108,7 +108,7 @@ namespace BancDelTempsOnline
 
         public override string StringInsertSql(TipusBaseDeDades tipusBD)
 		{
-			return "Insert into "+Taula+" values('"+Nom+"','"+Imatge+"','"+Descripció+"','"+QuiHoVaAfegir.PrimaryKey+"');";
+			return "Insert into "+Taula+"("+CampsServei.Nom.ToString()+"," + CampsServei.Imatge.ToString() + "," + CampsServei.Descripcio.ToString() + "," + CampsServei.QuiHoVaAfegirId.ToString() + ") values('"+Nom+"','"+Imatge+"','"+Descripció+"','"+QuiHoVaAfegir.PrimaryKey+"');";
 		}
 
 
@@ -246,7 +246,7 @@ namespace BancDelTempsOnline
 
         public override string StringInsertSql(TipusBaseDeDades tipusBD)
 		{
-			string sentencia = "insert into " + Taula + "  value(";
+			string sentencia = "insert into " + Taula + "("+CampsServeiUsuari.ServeiId+"," + CampsServeiUsuari.UsuariId + "," + CampsServeiUsuari.QuiHoVaComprobarId + "," + CampsServeiUsuari.Actiu  + ")  values(";
 			sentencia += "" + Servei.PrimaryKey + ",";
 			sentencia += "'" + Usuari.PrimaryKey + "',";
             sentencia += "'" + (quiHoVaComprobar != null ? quiHoVaComprobar.PrimaryKey : "") + "',";
