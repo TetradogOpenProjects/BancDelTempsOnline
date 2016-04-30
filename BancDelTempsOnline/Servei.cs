@@ -35,6 +35,8 @@ namespace BancDelTempsOnline
 		{
             if (imatge == null) imatge = "";
             if (descripció == null) descripció = "";
+            if (imatge.Length > TAMANYIMATGE|| descripció.Length > TAMANYDESCRIPCIO)
+                throw new ArgumentException("S'ha superat el tamany maxim");
             if (quiHoVaAfegir == null|nom==null)
                 throw new NullReferenceException();
 			AltaCanvi(CampsServei.Nom.ToString());
@@ -61,6 +63,8 @@ namespace BancDelTempsOnline
 			get{ return imatge; }
 			set{
                 if (value == null) value = "";
+                if (value.Length > TAMANYIMATGE)
+                    throw new ArgumentException("S'ha superat el tamany maxim");
                 imatge = value;
 				CanviString(CampsServei.Imatge.ToString(), imatge);
 			}
@@ -68,7 +72,10 @@ namespace BancDelTempsOnline
 
 		public string Descripció {
 			get{ return descripció; }
-			set{ descripció = value;
+			set{
+                if (value.Length > TAMANYDESCRIPCIO)
+                    throw new ArgumentException("S'ha superat el tamany maxim");
+                descripció = value;
 				CanviString(CampsServei.Descripcio.ToString(), descripció);
 			}
 		}

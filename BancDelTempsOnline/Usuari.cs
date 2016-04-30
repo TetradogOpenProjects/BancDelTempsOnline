@@ -26,11 +26,12 @@ namespace BancDelTempsOnline
         public const string CAMPPRIMARYKEY = "NIE";
         private const int TAMANYIMATGEPERFIL = 250 * 1024;//un 250KB
         private const int TAMANYNOM = 25;
-
+        private const int TAMANYNUMTELEFON = 9;
+        private const int TAMANYEMAIL = 30;
         //atributs clase
         int numSoci;
 		string nom;
-		string uriImatgePerfil;
+		string imatgePerfil;
 		string municipi;
         string telefon;
 		string email;
@@ -61,7 +62,7 @@ namespace BancDelTempsOnline
             this.quiHoVaFormalitzar = quiHoVaFormalitzar;
 			this.numSoci=numSoci;
 			this.nom=nom;
-			this.uriImatgePerfil=imatgePerfil;
+			this.imatgePerfil=imatgePerfil;
 			this.municipi=municipi;
 			this.telefon=telefon;
 			this.email=email;
@@ -95,19 +96,27 @@ namespace BancDelTempsOnline
 		}
 		public string Nom {
 			get{ return nom; }
-			set{ nom = value; 
+			set{
+                if (value.Length > TAMANYNOM)
+                    throw new ArgumentException("S'ha superat el maxim de longitud");
+                nom = value; 
 				CanviString(CampsUsuari.Nom.ToString(), nom);
 			}
 		}
-		public string UriImatgePerfil {
-			get{ return uriImatgePerfil; }
-			set{ uriImatgePerfil = value;
-				CanviString(CampsUsuari.ImatgePerfil.ToString(), UriImatgePerfil);
+		public string ImatgePerfil {
+			get{ return imatgePerfil; }
+			set{
+                if (value.Length > TAMANYIMATGEPERFIL)
+                    throw new ArgumentException("S'ha superat el maxim de longitud");
+                imatgePerfil = value;
+				CanviString(CampsUsuari.ImatgePerfil.ToString(), ImatgePerfil);
 			}
 		}
 		public string Municipi {
 			get{ return municipi; }
 			set{
+                if (value.Length > MunicipiQueVolAnar.TAMANYNOMMUNICIPI)
+                    throw new ArgumentException("S'ha superat el tamany maxim");
                 municipi = value;
 				CanviString(CampsUsuari.Municipi.ToString(), Municipi);   
 			}
@@ -120,13 +129,23 @@ namespace BancDelTempsOnline
 		}
 		public string Telefon {
 			get{ return telefon; }
-			set{ telefon = value; 
+			set{
+                if (value != null)
+                {
+                    if (value.Length != TAMANYNUMTELEFON)
+                        throw new ArgumentNullException();
+                }
+                else value = "";
+                telefon = value; 
 				CanviString(CampsUsuari.Telefon.ToString(), telefon);
 			}
 		}
 		public string Email {
 			get{ return email; }
-			set{ email = value; 
+			set{
+                if (value == null)
+                    throw new ArgumentNullException("es imprescindible");
+                email = value; 
 				CanviString(CampsUsuari.Email.ToString(), email);
 			}
 		}
@@ -190,7 +209,7 @@ namespace BancDelTempsOnline
 			sentencia+="'"+Municipi+"',";
 			sentencia+="'"+Email+"',";
 			sentencia+="'"+Actiu+"',";
-			sentencia+="'"+UriImatgePerfil+"',";
+			sentencia+="'"+ImatgePerfil+"',";
 			sentencia+=ObjecteSql.DateTimeToStringSQL(tipusBD,DataRegistre)+",";
 			sentencia+=ObjecteSql.DateTimeToStringSQL(tipusBD,DataInscripcioFormal)+",";
             sentencia += "'" + (quiHoVaFormalitzar != null ? quiHoVaFormalitzar.PrimaryKey : "") + "');";
@@ -260,9 +279,9 @@ namespace BancDelTempsOnline
             sentencia += CampsUsuari.NumSoci.ToString()+" int,";//fer trigger i secuencia per quan possin la data d'inscripció formal llavors es possi :D el numero que toqui
             sentencia += CampsUsuari.Nom.ToString() + " varchar("+TAMANYNOM+") NOT NULL,";
             sentencia += CampsUsuari.NIE.ToString() + " varchar(10) primarykey,";
-            sentencia += CampsUsuari.Telefon.ToString() + " varchar(9),";
+            sentencia += CampsUsuari.Telefon.ToString() + " varchar("+ TAMANYNUMTELEFON + "),";
             sentencia += CampsUsuari.Municipi.ToString() + " varchar("+MunicipiQueVolAnar.TAMANYNOMMUNICIPI+") NOT NULL,";
-            sentencia += CampsUsuari.Email.ToString() + " varchar(30) unique,";
+            sentencia += CampsUsuari.Email.ToString() + " varchar("+TAMANYEMAIL+") unique,";
             sentencia += CampsUsuari.Actiu.ToString() + " varchar(5) NOT NULL,";
             sentencia +=CampsUsuari.ImatgePerfil.ToString()+" varchar("+TAMANYIMATGEPERFIL+"),";
             sentencia += CampsUsuari.DataRegistre.ToString() + " date Not NULL,";
@@ -344,6 +363,8 @@ namespace BancDelTempsOnline
         public MunicipiQueVolAnar(string municipi, Usuari usuari) : this("", municipi, usuari) { }
         private MunicipiQueVolAnar(string id,string municipi, Usuari usuari):base(TAULA,id,CAMPPRIMARYKEY)
         {
+            if (municipi.Length > MunicipiQueVolAnar.TAMANYNOMMUNICIPI)
+                throw new ArgumentException("S'ha superat el tamany maxim");
             AltaCanvi(CampsMunicipiQueVolAnar.MunicipiId.ToString());
             AltaCanvi(CampsMunicipiQueVolAnar.UsuariId.ToString());
             this.municipi = municipi;
@@ -359,6 +380,8 @@ namespace BancDelTempsOnline
 
             set
             {
+                if (value.Length > TAMANYNOMMUNICIPI)
+                    throw new ArgumentException("S'ha superat el tamany maxim");
                 municipi = value;
                 CanviString(CampsMunicipiQueVolAnar.MunicipiId.ToString(), municipi);
             }

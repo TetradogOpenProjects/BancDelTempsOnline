@@ -44,6 +44,10 @@ namespace BancDelTempsOnline
 				return this.PrimaryKey;
 			}
 			set {
+                if (value == null)
+                    throw new NullReferenceException("El nom no pot ser null!!");
+                if (value.Length > MAXLONGITUDNOM)
+                    throw new ArgumentException("S'ha superat el maxim de longitud");
                 this.PrimaryKey = value;
 			}
 		}

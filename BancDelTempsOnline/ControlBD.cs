@@ -51,7 +51,7 @@ namespace BancDelTempsOnline
             MunicipiQueVolAnar[] municipisQueVolAnar;
             Certificat[] certificats;
             Servei[] serveis;
-            LlistaOrdenada<string, Certificat> certificatsList;
+            LlistaOrdenada<string, Certificat> certificatsList = new LlistaOrdenada<string, Certificat>();
             LlistaOrdenada<string, Servei> serveisList = new LlistaOrdenada<string, Servei>();
             LlistaOrdenada<string, Usuari> usuarisList = new LlistaOrdenada<string, Usuari>();
 
@@ -61,7 +61,7 @@ namespace BancDelTempsOnline
 
             certificats = Certificat.TaulaToCertificatsArray(BaseDeDades.ConsultaTableDirect(Certificat.TAULA),usuarisList);
             serveis = Servei.TaulaToServeisArray(BaseDeDades.ConsultaTableDirect(Servei.TAULA),usuarisList);
-             certificatsList = new LlistaOrdenada<string, Certificat>();
+             
             for (int i = 0; i < certificats.Length; i++)
                 certificatsList.Afegir(certificats[i].Nom, certificats[i]);
             for (int i = 0; i < serveis.Length; i++)
