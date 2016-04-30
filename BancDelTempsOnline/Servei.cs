@@ -19,48 +19,83 @@ namespace BancDelTempsOnline
 	public class Servei:ObjecteSqlIdAuto,IClauUnicaPerObjecte,IComparable<Servei>,IComparable
 	{
         enum CampsServei
-        { Nom, UriImatge, Descripcio }
+        { Id,Nom, Imatge, Descripcio,QuiHoVaAfegirId }
         public const string TAULA="Serveis";
+        public const string CAMPPRIMARYKEY = "Id";
 		string nom;
-		string uriImatge;
+		string imatge;
 		string descripció;
         string localIdUnic;
-		public Servei(string nom,string uriImatge,string descripció):base(TAULA,"","Id")
+        Usuari quiHoVaAfegir;
+        private const int TAMANYIMATGE=64*1024;//64KB
+        private const int TAMANYDESCRIPCIO = 200;
+
+        public Servei(string nom, string imatge, string descripció, Usuari quiHoVaAfegir) : this("", nom, imatge, descripció, quiHoVaAfegir) { }
+		private Servei(string id,string nom,string imatge,string descripció,Usuari quiHoVaAfegir):base(TAULA,id,CampsServei.Id.ToString())
 		{
-			AltaCanvi("Nom");
-			AltaCanvi("UriImatge");
-			AltaCanvi("Descripcio");
-			Nom=nom;
-			UriImatge=uriImatge;
-			Descripció=descripció;
+            if (imatge == null) imatge = "";
+            if (descripció == null) descripció = "";
+            if (quiHoVaAfegir == null|nom==null)
+                throw new NullReferenceException();
+			AltaCanvi(CampsServei.Nom.ToString());
+			AltaCanvi(CampsServei.Imatge.ToString());
+			AltaCanvi(CampsServei.Descripcio.ToString());
+            AltaCanvi(CampsServei.QuiHoVaAfegirId.ToString());
+			this.nom=nom;
+			this.imatge=imatge;
+			this.descripció=descripció;
+            this.quiHoVaAfegir = quiHoVaAfegir;
             localIdUnic = DateTime.Now.Ticks+" "+MiRandom.Next();//es per us local no es desa a la BD
 
         }
 		public string Nom {
 			get{ return nom; }
 			set{ nom = value;
-				CanviString("Nom",nom);
+				CanviString(CampsServei.Nom.ToString(), nom);
 			}
 		}
-		public string UriImatge {
-			get{ return uriImatge; }
-			set{ uriImatge = value;
-				CanviString("UriImatge",uriImatge);
+        /// <summary>
+        /// Cadena que representa una imatge en bytes no superior al maxim
+        /// </summary>
+		public string Imatge {
+			get{ return imatge; }
+			set{
+                if (value == null) value = "";
+                imatge = value;
+				CanviString(CampsServei.Imatge.ToString(), imatge);
 			}
 		}
+
 		public string Descripció {
 			get{ return descripció; }
 			set{ descripció = value;
-				CanviString("Descripcio",descripció);
+				CanviString(CampsServei.Descripcio.ToString(), descripció);
 			}
 		}
 
-		#region implemented abstract members of ObjecteSql
+        public Usuari QuiHoVaAfegir
+        {
+            get
+            {
+                return quiHoVaAfegir;
+            }
+
+            set
+            {
+                if (value == null)
+                    throw new NullReferenceException("Es requereix saber qui ho va afegir");
+                quiHoVaAfegir = value;
+                CanviString(CampsServei.QuiHoVaAfegirId.ToString(), quiHoVaAfegir.PrimaryKey);
+             
+            }
+        }
+
+        #region implemented abstract members of ObjecteSql
 
 
-		public override string StringInsertSql(TipusBaseDeDades tipusBD)
+        public override string StringInsertSql(TipusBaseDeDades tipusBD)
 		{
-			return "Insert into "+Taula+"(Nom,UriImatge,Descripcio) values('"+Nom+"','"+UriImatge+"','"+Descripció+"');";
+			return "Insert into "+Taula+" values('"+Nom+"','"+Imatge+"','"+Descripció+"','"+QuiHoVaAfegir.PrimaryKey+"');";
 		}
 
 
@@ -74,7 +109,10 @@ namespace BancDelTempsOnline
 		}
 
 		#endregion
-
+        public int CompareTo(object obj)
+        {
+            return CompareTo(obj as Servei);
+        }
 		#region IComparable implementation
 
 		public int CompareTo(Servei other)
@@ -86,22 +124,21 @@ namespace BancDelTempsOnline
 		public static string StringCreateTable()
 		{
 			string sentencia="create table "+TAULA+" (";
-			sentencia+="Nom varchar(25) NOT NULL,";
-			sentencia+="UriImatge varchar(250),";
-			sentencia+="Descripcio varchar(200));";
+            sentencia += CampsServei.Id.ToString() + " int NOT NULL AUTO_INCREMENT,";
+            sentencia += CampsServei.Nom.ToString() + " varchar(25) NOT NULL,";
+			sentencia+= CampsServei.Imatge.ToString() + " varchar(" + TAMANYIMATGE+"),";
+			sentencia+= CampsServei.Descripcio.ToString() + " varchar("+TAMANYDESCRIPCIO+"),";
+            sentencia += CampsServei.QuiHoVaAfegirId.ToString() + " varchar(10) references " + Usuari.TAULA + "(" + Usuari.CAMPPRIMARYKEY + "));";
 			return sentencia;
 		}
-        public static Servei[] TaulaToServeisArray(string[,] taulaServeis)
+        public static Servei[] TaulaToServeisArray(string[,] taulaServeis,LlistaOrdenada<string,Usuari> usuaris)
         {
             Servei[] serveis = new Servei[taulaServeis.GetLength(DimensionMatriz.Fila)];
             for(int i=0;i<serveis.Length;i++)
-                serveis[i]=new Servei(taulaServeis[(int)CampsServei.Nom,i],taulaServeis[(int)CampsServei.UriImatge, i],taulaServeis[(int)CampsServei.Descripcio, i]);
+                serveis[i]=new Servei(taulaServeis[(int)CampsServei.Id,i],taulaServeis[(int)CampsServei.Nom,i],taulaServeis[(int)CampsServei.Imatge, i],taulaServeis[(int)CampsServei.Descripcio, i],usuaris[taulaServeis[(int)CampsServei.QuiHoVaAfegirId, i]]);
             return serveis;
         }
-        public int CompareTo(object obj)
-        {
-            return CompareTo(obj as Servei);
-        }
+
     }
     /// <summary>
     /// Serveix per comptar els serveis que no requereixen d'un certificat
@@ -109,25 +146,37 @@ namespace BancDelTempsOnline
 	public class ServeiUsuari:ObjecteSqlIdAuto,IClauUnicaPerObjecte
 	{
         enum CampsServeiUsuari
-        { ServeiNom,UsuariNIE}
+        { Id,ServeiId,UsuariId,QuiHoVaComprobarId,Actiu}
         public const string TAULA="ServeisUsuari";
+        public const string CAMPPRIMARYKEY = "Id";
 		Servei servei;
 		Usuari usuari;
-		public ServeiUsuari(Servei servei,Usuari usuari):base(TAULA,"","Id")
+        Usuari quiHoVaComprobar;
+        bool actiu;
+        public ServeiUsuari( Servei servei, Usuari usuari) : this("", servei, usuari) { }
+        private ServeiUsuari(string id,Servei servei,Usuari usuari):base(TAULA,id,CampsServeiUsuari.Id.ToString())
 		{
-			AltaCanvi("Servei");
-			AltaCanvi("Usuari");
-			Servei=servei;
-			Usuari=usuari;
+			AltaCanvi(CampsServeiUsuari.ServeiId.ToString());
+			AltaCanvi(CampsServeiUsuari.UsuariId.ToString());
+            AltaCanvi(CampsServeiUsuari.QuiHoVaComprobarId.ToString());
+            AltaCanvi(CampsServeiUsuari.Actiu.ToString());
+			this.servei=servei;
+			this.usuari=usuari;
 		}
 
-		public Servei Servei {
+        public ServeiUsuari(Servei servei, Usuari usuari, Usuari quiHoVaComprobar, bool actiu):this(servei,usuari)
+        {
+            this.quiHoVaComprobar = quiHoVaComprobar;
+            this.actiu = actiu;
+        }
+
+        public Servei Servei {
 			get {
 				return servei;
 			}
 			set {
 				servei = value;
-				CanviString("Servei",servei.PrimaryKey);
+				CanviString(CampsServeiUsuari.ServeiId.ToString(), servei.PrimaryKey);
 			}
 		}
 
@@ -136,20 +185,62 @@ namespace BancDelTempsOnline
 				return usuari;
 			}
 			set {
+                if (value == null)
+                    throw new NullReferenceException("Es necessita un usuari pel servei!");
 				usuari = value;
-				CanviString("Usuari",usuari.PrimaryKey);
+				CanviString(CampsServeiUsuari.UsuariId.ToString(), usuari.PrimaryKey);
 			}
 		}
-		#region implemented abstract members of ObjecteSql
 
+        public Usuari QuiHoVaComprobar
+        {
+            get
+            {
+                return quiHoVaComprobar;
+            }
 
-		public override string StringInsertSql(TipusBaseDeDades tipusBD)
+            set
+            {
+                quiHoVaComprobar = value;
+                if(quiHoVaComprobar!=null)
+                {
+                    CanviString(CampsServeiUsuari.QuiHoVaComprobarId.ToString(), quiHoVaComprobar.PrimaryKey);
+                }else
+                {
+                    CanviString(CampsServeiUsuari.QuiHoVaComprobarId.ToString(), "");
+                }
+            }
+        }
+
+        public bool Actiu
+        {
+            get
+            {
+                return actiu;
+            }
+
+            set
+            {
+                actiu = value;
+                CanviString(CampsServeiUsuari.Actiu.ToString(), actiu.ToString());
+            }
+        }
+        #region implemented abstract members of ObjecteSql
+        public IComparable Clau()
+        {
+            return servei.Clau();
+        }
+
+        public override string StringInsertSql(TipusBaseDeDades tipusBD)
 		{
-			string sentencia = "insert into " + Taula + " (ServeiId,UsuariId) value(";
+			string sentencia = "insert into " + Taula + "  value(";
 			sentencia += "" + Servei.PrimaryKey + ",";
-			sentencia += "'" + Usuari.PrimaryKey + "');";
+			sentencia += "'" + Usuari.PrimaryKey + "',";
+            sentencia += "'" + (quiHoVaComprobar != null ? quiHoVaComprobar.PrimaryKey : "") + "',";
+            sentencia += "'" + actiu.ToString() + "');";
 			return sentencia;
 		}
+        #endregion
         /// <summary>
         /// Carrega i linka els usuaris als serveis 
         /// </summary>
@@ -162,27 +253,26 @@ namespace BancDelTempsOnline
             ServeiUsuari[] serveisUsuaris = new ServeiUsuari[taulaServeisUsuaris.GetLength(DimensionMatriz.Fila)];
             for(int i=0;i<serveisUsuaris.Length;i++)
             {
-                serveisUsuaris[i] = new ServeiUsuari(serveis[taulaServeisUsuaris[(int)CampsServeiUsuari.ServeiNom, i]], usuaris[taulaServeisUsuaris[(int)CampsServeiUsuari.UsuariNIE, i]]);
+                serveisUsuaris[i] = new ServeiUsuari(serveis[taulaServeisUsuaris[(int)CampsServeiUsuari.ServeiId, i]], usuaris[taulaServeisUsuaris[(int)CampsServeiUsuari.UsuariId, i]]);
                 usuaris[serveisUsuaris[i].Usuari.NIE].ServeisSenseCertificat.Añadir(serveisUsuaris[i]);
             }
             return serveisUsuaris;
         }
 
 
-        #endregion
+      
         public static string StringCreateTable()
 		{
 			string sentencia="create table "+TAULA+"(";
-			sentencia+="Id int NOT NULL AUTO_INCREMENT,";
-			sentencia+="ServeiId int NOT NULL references Serveis(Id),";
-			sentencia+="UsuariId varchar(10) NOT NULL references Usuaris(NIE));";
-			return sentencia;
+			sentencia+=CampsServeiUsuari.Id.ToString()+" int NOT NULL AUTO_INCREMENT,";
+			sentencia+= CampsServeiUsuari.ServeiId.ToString() + " int NOT NULL references " + Servei.TAULA + "(" + Servei.CAMPPRIMARYKEY + "),";
+			sentencia+= CampsServeiUsuari.UsuariId.ToString() + " varchar(10) NOT NULL references " + Usuari.TAULA + "(" + Usuari.CAMPPRIMARYKEY + "),";
+            sentencia += CampsServeiUsuari.QuiHoVaComprobarId.ToString() + " varchar(10)  references " + Usuari.TAULA+"("+Usuari.CAMPPRIMARYKEY+"),";
+            sentencia += CampsServeiUsuari.Actiu.ToString() + " varchar(5));";
+            return sentencia;
 		}
 
-        public IComparable Clau()
-        {
-            return servei.Clau();
-        }
+
     }
 
 }

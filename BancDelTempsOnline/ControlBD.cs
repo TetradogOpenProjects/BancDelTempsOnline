@@ -59,15 +59,15 @@ namespace BancDelTempsOnline
             for (int i = 0; i < usuaris.Length; i++)
                 usuarisList.Afegir(usuaris[i].NIE, usuaris[i]);
 
-            certificats = Certificat.TaulaToCertificatsArray(BaseDeDades.ConsultaTableDirect(Certificat.TAULA));
-            serveis = Servei.TaulaToServeisArray(BaseDeDades.ConsultaTableDirect(Servei.TAULA));
+            certificats = Certificat.TaulaToCertificatsArray(BaseDeDades.ConsultaTableDirect(Certificat.TAULA),usuarisList);
+            serveis = Servei.TaulaToServeisArray(BaseDeDades.ConsultaTableDirect(Servei.TAULA),usuarisList);
              certificatsList = new LlistaOrdenada<string, Certificat>();
             for (int i = 0; i < certificats.Length; i++)
                 certificatsList.Afegir(certificats[i].Nom, certificats[i]);
             for (int i = 0; i < serveis.Length; i++)
                 serveisList.Afegir(serveis[i].Nom, serveis[i]);
             certificatsUsuari = CertificatUsuari.TaulaToServeisUsuarisArray(BaseDeDades.ConsultaTableDirect(CertificatUsuari.TAULA),usuarisList,certificatsList);
-            serveisCertificat =  ServeiCertificat.TaulaToServeisCertificatsArray(BaseDeDades.ConsultaTableDirect(ServeiCertificat.TAULA),serveisList,certificatsList);
+            serveisCertificat =  ServeiCertificat.TaulaToServeisCertificatsArray(BaseDeDades.ConsultaTableDirect(ServeiCertificat.TAULA),usuarisList,serveisList,certificatsList);
             serveisUsuaris =  ServeiUsuari.TaulaToServeisUsuarisArray(BaseDeDades.ConsultaTableDirect(ServeiUsuari.TAULA),serveisList,usuarisList);
             municipisQueVolAnar =  MunicipiQueVolAnar.TaulaToMunicipisQueVolAnar(BaseDeDades.ConsultaTableDirect(MunicipiQueVolAnar.TAULA),usuarisList);
             //falta la part dels permisos i de la web
