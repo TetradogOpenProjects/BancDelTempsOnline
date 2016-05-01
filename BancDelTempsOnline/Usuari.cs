@@ -21,6 +21,7 @@ namespace BancDelTempsOnline
         {
             NumSoci, Nom, NIE, Telefon, Municipi, Email, Actiu, ImatgePerfil, DataRegistre, DataInscripcioFormal,QuiHoVaFormalitzar
         }
+        public const int TEMPSINICIAL = 10*60;//va en minuts
 		const int SOCIPENDENT = -1;
 		public const string TAULA="usuaris";
         public const string CAMPPRIMARYKEY = "NIE";
@@ -46,6 +47,7 @@ namespace BancDelTempsOnline
         //per trobarlos mes facilment
         LlistaOrdenada<Usuari, ListaUnica<Missatge>> missatgesEnviats;
         LlistaOrdenada<Usuari, ListaUnica<Missatge>> missatgesRebuts;
+        ListaUnica<OfertaTencada> ofertesTencades;
         Usuari quiHoVaFormalitzar;
 		//usuari donat d'alta
         /// <summary>
@@ -93,6 +95,7 @@ namespace BancDelTempsOnline
             serveisSenseCertificat = new ListaUnica<ServeiUsuari>();
             missatgesEnviats = new LlistaOrdenada<Usuari, ListaUnica<Missatge>>();
             missatgesRebuts = new LlistaOrdenada<Usuari, ListaUnica<Missatge>>();
+            ofertesTencades = new ListaUnica<OfertaTencada>();
 		}
 		//usuari registrat sense donar d'alta: per tant no esta activat ni te una data d'inscripcio formal!
 		public Usuari(string nom,string uriImatgePerfil,string municipi,string nie,string telefon,string email,DateTime dataRegistre)
@@ -101,6 +104,8 @@ namespace BancDelTempsOnline
 				public Usuari(string nom,string uriImatgePerfil,string municipi,string nie,string telefon,string email)
 					:this(SOCIPENDENT,nom,uriImatgePerfil,municipi,nie,telefon,email,false,default(DateTime),DateTime.Now,null){}
 		#region Propietats
+        public ListaUnica<OfertaTencada> OfertesTencades
+        { get { return ofertesTencades; } }
         public ListaUnica<CertificatUsuari> Certificats
         {
             get { return certificats; }
@@ -221,7 +226,17 @@ namespace BancDelTempsOnline
         }
 
         #region implemented abstract members of ObjecteSql
-
+        public int TempsEnMinuts()
+        {
+            int tempsEnMinuts = TEMPSINICIAL;
+            for (int i = 0; i < ofertesTencades.Count; i++)
+                if (ofertesTencades[i].Demandant.PrimaryKey == PrimaryKey)
+                    tempsEnMinuts -= ofertesTencades[i].Minuts;
+                else if (ofertesTencades[i].Ofert.PrimaryKey == PrimaryKey)
+                    tempsEnMinuts += ofertesTencades[i].Minuts;
+                else throw new Exception("Hi ha una ofertaTencada en l'usuari que no toca!!");
+            return tempsEnMinuts;
+        }
 
         public override string StringInsertSql(TipusBaseDeDades tipusBD)
 		{

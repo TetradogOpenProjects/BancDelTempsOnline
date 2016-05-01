@@ -75,6 +75,7 @@ namespace BancDelTempsOnline
             ServeiCertificat serveiCertificat;
             ServeiUsuari serveiUsuari;
             Missatge missatge;
+            OfertaTencada ofertaTencada;
             if (obj is Certificat)
             {
                 if (!certificatsList.Existeix(obj.PrimaryKey))
@@ -122,6 +123,13 @@ namespace BancDelTempsOnline
                 serveiUsuari = (ServeiUsuari)obj;
                 if (!usuarisList[serveiUsuari.Usuari.PrimaryKey].ServeisSenseCertificat.ExisteObjeto(serveiUsuari))
                     usuarisList[serveiUsuari.Usuari.PrimaryKey].ServeisSenseCertificat.Añadir(serveiUsuari);
+            }else if(obj is OfertaTencada)
+            {
+                ofertaTencada = (OfertaTencada)obj;
+                if (!usuarisList[ofertaTencada.Demandant.PrimaryKey].OfertesTencades.ExisteObjeto(ofertaTencada))
+                    usuarisList[ofertaTencada.Demandant.PrimaryKey].OfertesTencades.Añadir(ofertaTencada);
+                if (!usuarisList[ofertaTencada.Ofert.PrimaryKey].OfertesTencades.ExisteObjeto(ofertaTencada))
+                    usuarisList[ofertaTencada.Ofert.PrimaryKey].OfertesTencades.Añadir(ofertaTencada);
             }
 
             obj.Baixa += TreuObjecte;
@@ -135,6 +143,7 @@ namespace BancDelTempsOnline
             CertificatUsuari certificatUsuari;
             ServeiCertificat serveiCertificat;
             ServeiUsuari serveiUsuari;
+            OfertaTencada ofertaTencada;
             if (obj is Certificat)
             {
                 if (certificatsList.Existeix(obj.PrimaryKey))
@@ -178,6 +187,14 @@ namespace BancDelTempsOnline
                 if (usuarisList[serveiUsuari.Usuari.PrimaryKey].ServeisSenseCertificat.ExisteObjeto(serveiUsuari))
                     usuarisList[serveiUsuari.Usuari.PrimaryKey].ServeisSenseCertificat.Elimina(obj.PrimaryKey);
             }
+            else if (obj is OfertaTencada)
+            {
+                ofertaTencada = (OfertaTencada)obj;
+                if (usuarisList[ofertaTencada.Demandant.PrimaryKey].OfertesTencades.ExisteObjeto(ofertaTencada))
+                    usuarisList[ofertaTencada.Demandant.PrimaryKey].OfertesTencades.Elimina(ofertaTencada);
+                if (usuarisList[ofertaTencada.Ofert.PrimaryKey].OfertesTencades.ExisteObjeto(ofertaTencada))
+                    usuarisList[ofertaTencada.Ofert.PrimaryKey].OfertesTencades.Elimina(ofertaTencada);
+            }//per acabar de posar els nous
 
         }
         //aqui es posa totes les llistes que hi hagi per poder accedir a elles facilment
@@ -201,7 +218,7 @@ namespace BancDelTempsOnline
         #region implemented abstract members of ControlObjectesSql
 
         protected override void Restaurar()
-        {
+        {//per acabar de posar els nous
             Missatge[] missatges;
             Usuari[] usuaris;
             CertificatUsuari[] certificatsUsuari;
