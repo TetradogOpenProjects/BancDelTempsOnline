@@ -19,7 +19,7 @@ namespace BancDelTempsOnline
 	{
         //faltan opcions,part htmlMenu,part htmlCosOpcio,PermisMinim
         //falta  banners per prohibir opcions
-        
+
         //falten taulesHistorial de cada taula
         //falte taulaInterCanvis
         //falte  taulaOfertes
@@ -33,16 +33,173 @@ namespace BancDelTempsOnline
 
         //si canvia l'email s'ha de donar de baixa el permis de googleplus l'anterior
         //taula missatges usuariEmissor,usuariReceptor,Misstage
+
+        static string[] creates;
+        //per poder tenir tots els objectes rapidament els posem en llistes :)
+        LlistaOrdenada<string, Certificat> certificatsList;
+        LlistaOrdenada<string, Servei> serveisList;
+        LlistaOrdenada<string, Usuari> usuarisList;
+        LlistaOrdenada<string, Missatge> missatgesList;
        
-        static string[] creates = { Usuari.StringCreateTable(), Certificat.StringCreateTable(), Servei.StringCreateTable(), CertificatUsuari.StringCreateTable(), ServeiCertificat.StringCreateTable(), ServeiUsuari.StringCreateTable(), MunicipiQueVolAnar.StringCreateTable(),Missatge.StringCreateTable() };
-		public ControlBD(BaseDeDades baseDeDades):base(baseDeDades,creates)
+        static ControlBD()
+        {
+            creates=new string[] {
+                Usuari.StringCreateTable(),
+                Certificat.StringCreateTable(),
+                Servei.StringCreateTable(),
+                CertificatUsuari.StringCreateTable(),
+                ServeiCertificat.StringCreateTable(),
+                ServeiUsuari.StringCreateTable(),
+                MunicipiQueVolAnar.StringCreateTable(),
+                Missatge.StringCreateTable()
+            };
+        }
+
+        public ControlBD(BaseDeDades baseDeDades):base(baseDeDades,creates)
 		{
+           certificatsList = new LlistaOrdenada<string, Certificat>();
+           serveisList = new LlistaOrdenada<string, Servei>();
+           usuarisList = new LlistaOrdenada<string, Usuari>();
+           missatgesList = new LlistaOrdenada<string, Missatge>();
+           base.ObjNou += PosaObjecte;//aixi es mes comode perque no s'ha de fer després nomes s'ha d'afegir i llestos :)
+          
 		}
 
+        private void PosaObjecte(ObjecteSql obj)
+        {
+           
+                //si hi han nous tipos d'objectes es posen aqui
+                MunicipiQueVolAnar municipi;
+                CertificatUsuari certificatUsuari;
+                ServeiCertificat serveiCertificat;
+                ServeiUsuari serveiUsuari;
+                Missatge missatge;
+            if (obj is Certificat)
+            {
+                if (!certificatsList.Existeix(obj.PrimaryKey))
+                    certificatsList.Afegir(obj.PrimaryKey, obj as Certificat);
+            }
+            else if (obj is Servei)
+            {
+                if (!serveisList.Existeix(obj.PrimaryKey))
+                    serveisList.Afegir(obj.PrimaryKey, obj as Servei);
+            }
+            else if (obj is Usuari)
+            {
+                if (!usuarisList.Existeix(obj.PrimaryKey))
+                    usuarisList.Afegir(obj.PrimaryKey, obj as Usuari);
+            }
+            else if (obj is Missatge)
+            {
+                missatge = (Missatge)obj;
+                if (!missatgesList.Existeix(missatge.PrimaryKey))
+                {
+                    missatgesList.Afegir(missatge.PrimaryKey, missatge);
+                    usuarisList[missatge.UsuariEmisor.PrimaryKey].AfegirMissatge(missatge);
+                    usuarisList[missatge.UsuariReceptor.PrimaryKey].AfegirMissatge(missatge);
+                }
+            }
+            else if (obj is MunicipiQueVolAnar)
+            {
+                municipi = (MunicipiQueVolAnar)obj;
+                usuarisList[municipi.Usuari.PrimaryKey].AfegirMunicipiQueVolAnar(municipi);
+            }
+            else if (obj is CertificatUsuari)
+            {
+                certificatUsuari = (CertificatUsuari)obj;
+                if (!usuarisList[certificatUsuari.Usuari.PrimaryKey].Certificats.ExisteObjeto(certificatUsuari))
+                    usuarisList[certificatUsuari.Usuari.PrimaryKey].Certificats.Añadir(certificatUsuari);
+            }
+            else if (obj is ServeiCertificat)
+            {
+                serveiCertificat = (ServeiCertificat)obj;
+                if (!certificatsList[serveiCertificat.Certificat.PrimaryKey].Serveis.ExisteObjeto(serveiCertificat))
+                    certificatsList[serveiCertificat.Certificat.PrimaryKey].Serveis.Añadir(serveiCertificat);
+            }
+            else if (obj is ServeiUsuari)
+            {
+                serveiUsuari = (ServeiUsuari)obj;
+                if (!usuarisList[serveiUsuari.Usuari.PrimaryKey].ServeisSenseCertificat.ExisteObjeto(serveiUsuari))
+                    usuarisList[serveiUsuari.Usuari.PrimaryKey].ServeisSenseCertificat.Añadir(serveiUsuari);
+            }
 
-		#region implemented abstract members of ControlObjectesSql
+                obj.Baixa += TreuObjecte;
+        }
 
-		protected override void Restaurar()
+        private void TreuObjecte(ObjecteSql obj)
+        {
+        
+                //si hi han nous tipos d'objectes es posen aqui
+                MunicipiQueVolAnar municipi;
+                CertificatUsuari certificatUsuari;
+                ServeiCertificat serveiCertificat;
+                ServeiUsuari serveiUsuari;
+                if (obj is Certificat)
+                {
+                    if (certificatsList.Existeix(obj.PrimaryKey))
+                        certificatsList.Elimina(obj.PrimaryKey);
+                }
+                else if (obj is Servei)
+                {
+                    if (serveisList.Existeix(obj.PrimaryKey))
+                        serveisList.Elimina(obj.PrimaryKey); ;
+                }
+                else if (obj is Usuari)
+                {
+                    if (usuarisList.Existeix(obj.PrimaryKey))
+                        usuarisList.Elimina(obj.PrimaryKey);
+            }
+                else if (obj is Missatge)
+                {
+                    if (missatgesList.Existeix(obj.PrimaryKey))
+                        missatgesList.Elimina(obj.PrimaryKey);
+            }
+                else if (obj is MunicipiQueVolAnar)
+                {
+                    municipi = (MunicipiQueVolAnar)obj;
+                    usuarisList[municipi.Usuari.PrimaryKey].TreuMunicipiQuePotAnar(municipi.Municipi);
+                }
+                else if (obj is CertificatUsuari)
+                {
+                    certificatUsuari = (CertificatUsuari)obj;
+                    if (usuarisList[certificatUsuari.Usuari.PrimaryKey].Certificats.ExisteObjeto(certificatUsuari))
+                        usuarisList[certificatUsuari.Usuari.PrimaryKey].Certificats.Elimina(obj.PrimaryKey);
+            }
+                else if (obj is ServeiCertificat)
+                {
+                    serveiCertificat = (ServeiCertificat)obj;
+                    if (certificatsList[serveiCertificat.Certificat.PrimaryKey].Serveis.ExisteObjeto(serveiCertificat))
+                        certificatsList[serveiCertificat.Certificat.PrimaryKey].Serveis.Elimina(obj.PrimaryKey);
+            }
+                else if (obj is ServeiUsuari)
+                {
+                    serveiUsuari = (ServeiUsuari)obj;
+                    if (usuarisList[serveiUsuari.Usuari.PrimaryKey].ServeisSenseCertificat.ExisteObjeto(serveiUsuari))
+                        usuarisList[serveiUsuari.Usuari.PrimaryKey].ServeisSenseCertificat.Elimina(obj.PrimaryKey);
+            }
+            
+        }
+
+        public  Certificat ObtéCertificat(string primaryKey)
+        {
+            return certificatsList[primaryKey];
+        }
+        public Usuari ObtéUsuari(string primaryKey)
+        {
+            return usuarisList[primaryKey];
+        }
+        public Servei ObtéServei(string primaryKey)
+        {
+            return serveisList[primaryKey];
+        }
+        public Missatge ObtéMissatge(string primaryKey)
+        {
+            return missatgesList[primaryKey];
+        }
+
+        #region implemented abstract members of ControlObjectesSql
+
+        protected override void Restaurar()
 		{
             Missatge[] missatges;
             Usuari[] usuaris;
@@ -52,9 +209,6 @@ namespace BancDelTempsOnline
             MunicipiQueVolAnar[] municipisQueVolAnar;
             Certificat[] certificats;
             Servei[] serveis;
-            LlistaOrdenada<string, Certificat> certificatsList = new LlistaOrdenada<string, Certificat>();
-            LlistaOrdenada<string, Servei> serveisList = new LlistaOrdenada<string, Servei>();
-            LlistaOrdenada<string, Usuari> usuarisList = new LlistaOrdenada<string, Usuari>();
 
             usuaris = Usuari.TaulaToUsuariArray(BaseDeDades.ConsultaTableDirect(Usuari.TAULA));
             for (int i = 0; i < usuaris.Length; i++)

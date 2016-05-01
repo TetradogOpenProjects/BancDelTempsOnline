@@ -15,7 +15,7 @@ namespace BancDelTempsOnline
 	/// <summary>
 	/// Description of Usuari.
 	/// </summary>
-	public class Usuari:ObjecteSql,IClauUnicaPerObjecte
+	public class Usuari:ObjecteSql,IClauUnicaPerObjecte,IComparable,IComparable<Usuari>
 	{
         enum CampsUsuari
         {
@@ -42,6 +42,10 @@ namespace BancDelTempsOnline
         ListaUnica<CertificatUsuari> certificats = new ListaUnica<CertificatUsuari>();
         ListaUnica<MunicipiQueVolAnar> municipisQueVolAnar;//es una llista de municipis on l'usuari pot anar
         ListaUnica<ServeiUsuari> serveisSenseCertificat;
+
+        //per trobarlos mes facilment
+        LlistaOrdenada<Usuari, ListaUnica<Missatge>> missatgesEnviats;
+        LlistaOrdenada<Usuari, ListaUnica<Missatge>> missatgesRebuts;
         Usuari quiHoVaFormalitzar;
 		//usuari donat d'alta
         /// <summary>
@@ -87,6 +91,8 @@ namespace BancDelTempsOnline
             municipisQueVolAnar = new ListaUnica<MunicipiQueVolAnar>();
             certificats = new ListaUnica<CertificatUsuari>();
             serveisSenseCertificat = new ListaUnica<ServeiUsuari>();
+            missatgesEnviats = new LlistaOrdenada<Usuari, ListaUnica<Missatge>>();
+            missatgesRebuts = new LlistaOrdenada<Usuari, ListaUnica<Missatge>>();
 		}
 		//usuari registrat sense donar d'alta: per tant no esta activat ni te una data d'inscripcio formal!
 		public Usuari(string nom,string uriImatgePerfil,string municipi,string nie,string telefon,string email,DateTime dataRegistre)
@@ -249,6 +255,52 @@ namespace BancDelTempsOnline
 		#endregion
 
 		#endregion
+        public void AfegirMissatge(Missatge missatge)
+        {
+            if (missatge.UsuariEmisor.PrimaryKey == PrimaryKey) {
+                if (!missatgesEnviats.Existeix(missatge.UsuariReceptor))
+                    missatgesEnviats.Afegir(missatge.UsuariReceptor, new ListaUnica<Missatge>());
+                if(!missatgesEnviats[missatge.UsuariReceptor].ExisteObjeto(missatge))
+                  missatgesEnviats[missatge.UsuariReceptor].Añadir(missatge);
+                        }
+            else if (missatge.UsuariReceptor.PrimaryKey == PrimaryKey)
+            {
+                if (!missatgesRebuts.Existeix(missatge.UsuariReceptor))
+                    missatgesRebuts.Afegir(missatge.UsuariReceptor, new ListaUnica<Missatge>());
+                if (!missatgesRebuts[missatge.UsuariReceptor].ExisteObjeto(missatge))
+                    missatgesRebuts[missatge.UsuariReceptor].Añadir(missatge);
+            }
+        }
+        public Missatge[] MissatgesUsuari(Usuari usuariEmisor)
+        {
+            return MissatgesEnviatsRebuts(missatgesRebuts, usuariEmisor);
+        }
+        public Missatge[] MissatgesEnviats(Usuari usuariReceptor)
+        {
+            return MissatgesEnviatsRebuts(missatgesEnviats, usuariReceptor);
+        }
+        public Usuari[] EmissorsMissatgesUsuari()
+        {
+            return missatgesRebuts.KeysToArray();
+        }
+        public Usuari[] ReceptorsMissatgesUsuari()
+        {
+            return missatgesEnviats.KeysToArray();
+        }
+      
+        private Missatge[] MissatgesEnviatsRebuts(LlistaOrdenada<Usuari,ListaUnica<Missatge>> missatgeList,Usuari usuari)
+        {
+            //per no repetir el mateix codi :)
+            Missatge[] missatges;
+
+            if (!missatgeList.Existeix(usuari))
+                missatges = new Missatge[] { };
+            else
+                missatges = missatgeList[usuari].Ordena().ToTaula();
+
+            return missatges;
+        }
+     
         public bool PotAnarAlMunicipi(string municipi)
         {
             return this.Municipi == municipi || this.municipisQueVolAnar.ExisteClave(municipi);
@@ -289,6 +341,19 @@ namespace BancDelTempsOnline
         public bool ConteServei(IEnumerable<Servei> serveis)
         {
             return Serveis().Contains(serveis);
+        }
+        public int CompareTo(Usuari other)
+        {
+            int comparteTo;
+            if (other != null)
+                comparteTo = PrimaryKey.CompareTo(other.PrimaryKey);
+            else comparteTo = -1;
+            return comparteTo;
+        }
+
+        public int CompareTo(object obj)
+        {
+            return CompareTo(obj as Usuari);
         }
         #region Metodes de Clase
         public static string StringCreateTable()
@@ -362,6 +427,8 @@ namespace BancDelTempsOnline
                     usuarisQueFanElServei.Add(usuari);
             return usuarisQueFanElServei.ToTaula();
         }
+
+
 
 
         #endregion

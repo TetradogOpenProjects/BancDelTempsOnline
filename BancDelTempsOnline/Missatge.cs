@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace BancDelTempsOnline
 {
-    public class Missatge : ObjecteSqlIdAuto, IClauUnicaPerObjecte
+    public class Missatge : ObjecteSqlIdAuto, IClauUnicaPerObjecte,IComparable<Missatge>,IComparable
     {
         enum CampsMissatge
         {
@@ -130,6 +130,22 @@ namespace BancDelTempsOnline
                 missatges[i] = new Missatge(taulaMissatges[(int)CampsMissatge.Id, i], usuarisList[taulaMissatges[(int)CampsMissatge.Emisor, i]], usuarisList[taulaMissatges[(int)CampsMissatge.Receptor, i]], taulaMissatges[(int)CampsMissatge.Missatge, i], ObjecteSql.StringToDateTime(taulaMissatges[(int)CampsMissatge.Data, i]));
             }
             return missatges;
+        }
+
+        public int CompareTo(Missatge other)
+        {
+            int compareTo;
+            if (other != null)
+            {
+                compareTo = Data.CompareTo(other.Data);
+            }
+            else compareTo = -1;
+            return compareTo;
+        }
+
+        public int CompareTo(object obj)
+        {
+            return CompareTo(obj as Missatge);
         }
     }
 }
