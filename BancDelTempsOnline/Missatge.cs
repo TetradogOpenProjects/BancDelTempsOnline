@@ -12,25 +12,26 @@ namespace BancDelTempsOnline
     {
         enum CampsMissatge
         {
-            Id,Emisor,Receptor,Missatge,Data
+            Id,Emisor,Receptor,Missatge,Adjunt,Data
         }
 
         public const string TAULA = "Missatges";
         public const string CAMPPRIMARYKEY = "Id";
         public const int LONGITUDMISSATGEMAX=300;//caracters per missatge
-
+        public const int LONGITUDMAXIMADJUNT = 1 * 1024 * 1034;//1MB per adjunt
         string idUnic;
         Usuari usuariEmisor;
         Usuari usuariReceptor;
         string missatge;
         DateTime data;
-       
-        public Missatge(Usuari usuariEmisor, Usuari usuariReceptor, string missatge, DateTime data) : this("",usuariEmisor, usuariReceptor, missatge, data) { }
-        private Missatge(string id,Usuari usuariEmisor, Usuari usuariReceptor, string missatge, DateTime data):base(TAULA,id,CAMPPRIMARYKEY)
+        Fitxer adjunt;
+        public Missatge(Usuari usuariEmisor, Usuari usuariReceptor, string missatge,Fitxer adjunt, DateTime data) : this("",usuariEmisor, usuariReceptor, missatge, adjunt, data) { }
+        private Missatge(string id,Usuari usuariEmisor, Usuari usuariReceptor, string missatge,Fitxer adjunt, DateTime data):base(TAULA,id,CAMPPRIMARYKEY)
         {
             base.AltaCanvi(CampsMissatge.Emisor.ToString());
             base.AltaCanvi(CampsMissatge.Receptor.ToString());
             base.AltaCanvi(CampsMissatge.Missatge.ToString());
+            base.AltaCanvi(CampsMissatge.Adjunt.ToString());
             base.AltaCanvi(CampsMissatge.Data.ToString());
             this.usuariEmisor = usuariEmisor;
             this.usuariReceptor = usuariReceptor;
@@ -97,6 +98,22 @@ namespace BancDelTempsOnline
                 CanviData(CampsMissatge.Data.ToString(),data);
             }
         }
+
+        public Fitxer Adjunt
+        {
+            get
+            {
+                return adjunt;
+            }
+
+            set
+            {
+                if (value != null && value.Dades.Length > LONGITUDMAXIMADJUNT)
+                    throw new ArgumentException("S'ha superat el maxim");
+                adjunt = value;
+            }
+        }
+
         public IComparable Clau()
         {
             return idUnic;
@@ -108,26 +125,28 @@ namespace BancDelTempsOnline
             sentencia += "'" + UsuariEmisor.PrimaryKey + "',";
             sentencia += "'" + usuariReceptor.PrimaryKey + "',";
             sentencia += "'" + MissatgeString + "',";
+            sentencia += (Adjunt!=null?Adjunt.PrimaryKey:"null") + ",";
             sentencia += "'" + ObjecteSql.DateTimeToStringSQL(tipusBD,data) + "');";
             return sentencia;
         }
         public static string StringCreateTable()
         {
             string sentencia = "create table " + TAULA + " (";
-            sentencia += CampsMissatge.Id.ToString() + " int int NOT NULL AUTO_INCREMENT,";
+            sentencia += CampsMissatge.Id.ToString() + " int int AUTO_INCREMENT primarykey,";
             sentencia += CampsMissatge.Emisor.ToString() + " varchar(10) not null references " + Usuari.TAULA + "(" + Usuari.CAMPPRIMARYKEY + "),";
             sentencia += CampsMissatge.Receptor.ToString() + " varchar(10) not null references " + Usuari.TAULA + "(" + Usuari.CAMPPRIMARYKEY + "),";
             sentencia += CampsMissatge.Missatge.ToString() + " varchar(" + LONGITUDMISSATGEMAX + ") not null,";
+            sentencia += CampsMissatge.Adjunt.ToString() + " int  references " + Fitxer.TAULA + "(" + Fitxer.CAMPPRIMARYKEY + "),";
             sentencia += CampsMissatge.Data.ToString() + " date not null);";
             return sentencia;
         }
 
-        public static Missatge[] TaulaToMissatges(string[,] taulaMissatges, LlistaOrdenada<string, Usuari> usuarisList)
+        public static Missatge[] TaulaToMissatges(string[,] taulaMissatges, LlistaOrdenada<string, Usuari> usuarisList,LlistaOrdenada<string,Fitxer> fitxers)
         {
             Missatge[] missatges = new Missatge[taulaMissatges.GetLength(DimensionMatriz.Fila)];
             for(int i=0;i<missatges.Length;i++)
             {
-                missatges[i] = new Missatge(taulaMissatges[(int)CampsMissatge.Id, i], usuarisList[taulaMissatges[(int)CampsMissatge.Emisor, i]], usuarisList[taulaMissatges[(int)CampsMissatge.Receptor, i]], taulaMissatges[(int)CampsMissatge.Missatge, i], ObjecteSql.StringToDateTime(taulaMissatges[(int)CampsMissatge.Data, i]));
+                missatges[i] = new Missatge(taulaMissatges[(int)CampsMissatge.Id, i], usuarisList[taulaMissatges[(int)CampsMissatge.Emisor, i]], usuarisList[taulaMissatges[(int)CampsMissatge.Receptor, i]], taulaMissatges[(int)CampsMissatge.Missatge, i],fitxers[taulaMissatges[(int)CampsMissatge.Adjunt, i]], ObjecteSql.StringToDateTime(taulaMissatges[(int)CampsMissatge.Data, i]));
             }
             return missatges;
         }

@@ -1,4 +1,5 @@
 ﻿using Gabriel.Cat;
+using Gabriel.Cat.Extension;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,7 +19,8 @@ namespace BancDelTempsOnline
         }
         enum CampsOfertaTencada
         {
-            Id,Demandant,Ofert,DadesPerTrobarAQuiOferta,Temps,Inici,Fi,QuiValidaLaOferta
+            Id,Demandant,Ofert,DadesPerTrobarAQuiOferta,Titol,Descripcio,Temps,Inici,Fi,QuiValidaLaOferta
+            
         }
         public const int MAXLONGITUDDADESPERTROBAROFERTANT = 50;
         public const string TAULA="OfertesTencades";
@@ -31,7 +33,8 @@ namespace BancDelTempsOnline
         DateTime fi;
         Usuari quiValidaLaOferta;
         string idUnicLocal;
-       
+        string titol;
+        string descripcio;
 
         //si no s'ha sap qui s'ha ofert
         public OfertaTencada(Usuari demandant, string dadesPerTrobarAQuiOferta, string titol, string descripcio, int minuts, DateTime inici, DateTime fi) : this("", demandant, null, dadesPerTrobarAQuiOferta, titol, descripcio, minuts, inici, fi, null) { }
@@ -44,20 +47,25 @@ namespace BancDelTempsOnline
                 throw new NullReferenceException();
             else if (String.IsNullOrEmpty(titol) || String.IsNullOrEmpty(descripcio) || minuts < 0||inici>fi)
                 throw new ArgumentException();
+
             AltaCanvi(CampsOfertaTencada.Demandant.ToString());
             AltaCanvi(CampsOfertaTencada.Ofert.ToString());
             AltaCanvi(CampsOfertaTencada.DadesPerTrobarAQuiOferta.ToString());
+            AltaCanvi(CampsOfertaTencada.Titol.ToString());
+            AltaCanvi(CampsOfertaTencada.Descripcio.ToString());
             AltaCanvi(CampsOfertaTencada.Temps.ToString());
             AltaCanvi(CampsOfertaTencada.Inici.ToString());
             AltaCanvi(CampsOfertaTencada.Fi.ToString());
             AltaCanvi(CampsOfertaTencada.QuiValidaLaOferta.ToString());
 
+            this.titol = titol;
             this.demandant = demandant;
             this.ofert = ofert;
             this.dadesPerTrobarAQuiOferta = dadesPerTrobarAQuiOferta;
             this.minuts = minuts;
             this.inici = inici;
             this.fi = fi;
+            this.descripcio = descripcio;
             this.quiValidaLaOferta = quiValidaLaOferta;
             idUnicLocal = MiRandom.Next()+"" + DateTime.Now.Ticks;
         }
@@ -170,14 +178,49 @@ namespace BancDelTempsOnline
                 else CanviString(CampsOfertaTencada.QuiValidaLaOferta.ToString(), null);
             }
         }
+
+        public string Titol
+        {
+            get
+            {
+                return titol;
+            }
+
+            set
+            {
+                if (String.IsNullOrEmpty(value)) throw new ArgumentException("Es necesita un titol");
+                else if (value.Length > OfertaActiva.MAXLONGITUDTITOL) throw new ArgumentException("Es masa llarg el titol!");
+                titol = value;
+                CanviString(CampsOfertaTencada.Titol.ToString(), titol);
+            }
+        }
+
+        public string Descripcio
+        {
+            get
+            {
+                return descripcio;
+            }
+
+            set
+            {
+                if (value == null) throw new ArgumentNullException();
+                else if (value.Length > OfertaActiva.MAXLONGITUDDESCRIPCIO)
+                    throw new ArgumentException("Supera el maxim de longitut!!");
+                descripcio = value;
+                CanviString(CampsOfertaTencada.Descripcio.ToString(), descripcio);
+            }
+        }
         #endregion
         public override string StringInsertSql(TipusBaseDeDades tipusBD)
         {
-          string sentencia="insert into "+TAULA+"("+CampsOfertaTencada.Demandant.ToString()+","+ CampsOfertaTencada.Ofert.ToString() + "," + CampsOfertaTencada.DadesPerTrobarAQuiOferta.ToString() + "," + CampsOfertaTencada.Temps.ToString() + "," + CampsOfertaTencada.Inici.ToString() + "," + CampsOfertaTencada.Fi.ToString() + "," + CampsOfertaTencada.QuiValidaLaOferta.ToString() +") values(";
+          string sentencia="insert into "+TAULA+"("+CampsOfertaTencada.Demandant.ToString()+","+ CampsOfertaTencada.Ofert.ToString() + "," + CampsOfertaTencada.Titol.ToString() + "," + CampsOfertaTencada.Descripcio.ToString() + "," + CampsOfertaTencada.DadesPerTrobarAQuiOferta.ToString() + "," + CampsOfertaTencada.Temps.ToString() + "," + CampsOfertaTencada.Inici.ToString() + "," + CampsOfertaTencada.Fi.ToString() + "," + CampsOfertaTencada.QuiValidaLaOferta.ToString() +") values(";
             sentencia += "'" + Demandant.PrimaryKey + "',";
             if (Ofert != null)
                 sentencia += "'" + Ofert.PrimaryKey + "',";
             else sentencia += "null,";
+            sentencia += "'" + Titol + "',";
+            sentencia += "'" + Descripcio + "',";
             sentencia += "'" + DadesPerTrobarAQuiOferta + "',";
             sentencia += Minuts + ",";
             sentencia += ObjecteSql.DateTimeToStringSQL(tipusBD, inici)+",";
@@ -195,17 +238,25 @@ namespace BancDelTempsOnline
         public static string StringCreateTable()
         {
             string sentencia = "Create table " + TAULA + " (";
-            sentencia += CampsOfertaTencada.Id.ToString() + " int NOT NULL AUTO_INCREMENT,";
+            sentencia += CampsOfertaTencada.Id.ToString() + " int  AUTO_INCREMENT primaryKey,";
             sentencia += CampsOfertaTencada.Demandant.ToString() + " varchar(10) not null references " + Usuari.TAULA + "(" + Usuari.CAMPPRIMARYKEY + "),";
             sentencia += CampsOfertaTencada.Ofert.ToString() + " varchar(10)  references " + Usuari.TAULA + "(" + Usuari.CAMPPRIMARYKEY + "),";
             sentencia += CampsOfertaTencada.DadesPerTrobarAQuiOferta.ToString() + " varchar(" + MAXLONGITUDDADESPERTROBAROFERTANT + "),";
-            sentencia += CampsOfertaTencada.Temps.ToString() + " int,";
-            sentencia += CampsOfertaTencada.Inici.ToString() + " date,";
-            sentencia += CampsOfertaTencada.Fi.ToString() + " date,";
+            sentencia += CampsOfertaTencada.Titol.ToString() + " varchar(" + OfertaActiva.MAXLONGITUDTITOL + ") not null,";
+            sentencia += CampsOfertaTencada.Descripcio.ToString() + " varchar(" + OfertaActiva.MAXLONGITUDDESCRIPCIO + ") not null,";
+            sentencia += CampsOfertaTencada.Temps.ToString() + " int not null,";
+            sentencia += CampsOfertaTencada.Inici.ToString() + " date not null,";
+            sentencia += CampsOfertaTencada.Fi.ToString() + " date not null,";
             sentencia += CampsOfertaTencada.QuiValidaLaOferta.ToString() + " varchar(10)  references " + Usuari.TAULA + "(" + Usuari.CAMPPRIMARYKEY + "));";
             return sentencia;
         }
 
-  
+        public static OfertaTencada[] TaulaToOfertesTencades(string[,] taulaOfertesTencades, LlistaOrdenada<string, Usuari> usuarisList)
+        {
+            OfertaTencada[] ofertesTencades = new OfertaTencada[taulaOfertesTencades.GetLength(DimensionMatriz.Fila)];
+            for (int i = 0; i < ofertesTencades.Length; i++)
+                ofertesTencades[i] = new OfertaTencada(taulaOfertesTencades[(int)CampsOfertaTencada.Id, i], usuarisList[taulaOfertesTencades[(int)CampsOfertaTencada.Demandant, i]], usuarisList[taulaOfertesTencades[(int)CampsOfertaTencada.Ofert, i]], taulaOfertesTencades[(int)CampsOfertaTencada.DadesPerTrobarAQuiOferta, i], taulaOfertesTencades[(int)CampsOfertaTencada.Titol, i], taulaOfertesTencades[(int)CampsOfertaTencada.Descripcio, i], Convert.ToInt32(taulaOfertesTencades[(int)CampsOfertaTencada.Temps, i]), ObjecteSql.StringToDateTime(taulaOfertesTencades[(int)CampsOfertaTencada.Inici, i]), ObjecteSql.StringToDateTime(taulaOfertesTencades[(int)CampsOfertaTencada.Fi, i]), usuarisList[taulaOfertesTencades[(int)CampsOfertaTencada.QuiValidaLaOferta, i]]);
+            return ofertesTencades;
+        }
     }
 }

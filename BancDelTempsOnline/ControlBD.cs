@@ -16,14 +16,11 @@ namespace BancDelTempsOnline
     /// Description of ControlBD.
     /// </summary>
     public class ControlBD : ControlObjectesSql
-    {
+    {//comprobar que tot tingui el seu create,ObjecteNou,Restaurar bé
         //faltan opcions,part htmlMenu,part htmlCosOpcio,PermisMinim
         //falta  banners per prohibir opcions
 
         //falten taulesHistorial de cada taula
-        //falte taulaInterCanvis
-        //falte  taulaOfertes
-        //falte taulaUsuarisOfertats//es una taula on surten els usuaris proposats per una oferta
         //falte taula objectesOfertatsPrestats
         //falte taula tallers!!
 
@@ -40,10 +37,12 @@ namespace BancDelTempsOnline
         LlistaOrdenada<string, Servei> serveisList;
         LlistaOrdenada<string, Usuari> usuarisList;
         LlistaOrdenada<string, Missatge> missatgesList;
-
+        LlistaOrdenada<string, Fitxer> fitxersList;
+        LlistaOrdenada<string, OfertaActiva> ofertesActivesList;
         static ControlBD()
         {
             creates = new string[] {
+                Fitxer.StringCreateTable(),
                 Usuari.StringCreateTable(),
                 Certificat.StringCreateTable(),
                 Servei.StringCreateTable(),
@@ -51,16 +50,16 @@ namespace BancDelTempsOnline
                 ServeiCertificat.StringCreateTable(),
                 ServeiUsuari.StringCreateTable(),
                 MunicipiQueVolAnar.StringCreateTable(),
-                Missatge.StringCreateTable()
+                Missatge.StringCreateTable(),
+                OfertaTencada.StringCreateTable(),
+                OfertaActiva.StringCreateTable(),
+                UsuariPerLaOferta.StringCreateTable(),
             };
         }
 
         public ControlBD(BaseDeDades baseDeDades) : base(baseDeDades, creates)
         {
-            certificatsList = new LlistaOrdenada<string, Certificat>();
-            serveisList = new LlistaOrdenada<string, Servei>();
-            usuarisList = new LlistaOrdenada<string, Usuari>();
-            missatgesList = new LlistaOrdenada<string, Missatge>();
+            //faig els new de les llistes en la zona de restaurar perque es cridarà avanç!!
             base.ObjNou += PosaObjecte;//aixi es mes comode perque no s'ha de fer després nomes s'ha d'afegir i llestos :)
 
         }
@@ -76,6 +75,9 @@ namespace BancDelTempsOnline
             ServeiUsuari serveiUsuari;
             Missatge missatge;
             OfertaTencada ofertaTencada;
+            OfertaActiva ofertaActiva;
+            Fitxer fitxer;
+            UsuariPerLaOferta usuariPerLaOferta;
             if (obj is Certificat)
             {
                 if (!certificatsList.Existeix(obj.PrimaryKey))
@@ -130,6 +132,20 @@ namespace BancDelTempsOnline
                     usuarisList[ofertaTencada.Demandant.PrimaryKey].OfertesTencades.Añadir(ofertaTencada);
                 if (!usuarisList[ofertaTencada.Ofert.PrimaryKey].OfertesTencades.ExisteObjeto(ofertaTencada))
                     usuarisList[ofertaTencada.Ofert.PrimaryKey].OfertesTencades.Añadir(ofertaTencada);
+            }else if(obj is Fitxer)
+            {
+                fitxer = (Fitxer)obj;
+                if (!fitxersList.Existeix(fitxer.PrimaryKey))
+                    fitxersList.Afegir(fitxer.PrimaryKey, fitxer);
+            }else if(obj is OfertaActiva)
+            {
+                ofertaActiva = (OfertaActiva)obj;
+                if(!usuarisList[ofertaActiva.Demandant.PrimaryKey].OfertesActives.ExisteObjeto(ofertaActiva))
+                  usuarisList[ofertaActiva.Demandant.PrimaryKey].OfertesActives.Añadir(ofertaActiva);
+            }else if(obj is UsuariPerLaOferta)
+            {
+                usuariPerLaOferta = (UsuariPerLaOferta)obj;
+                ofertesActivesList[usuariPerLaOferta.Oferta.PrimaryKey].UsuarisPerLaOferta.Añadir(usuariPerLaOferta);
             }
 
             obj.Baixa += TreuObjecte;
@@ -144,6 +160,7 @@ namespace BancDelTempsOnline
             ServeiCertificat serveiCertificat;
             ServeiUsuari serveiUsuari;
             OfertaTencada ofertaTencada;
+            UsuariPerLaOferta usuariPerLaOferta;
             if (obj is Certificat)
             {
                 if (certificatsList.Existeix(obj.PrimaryKey))
@@ -194,7 +211,13 @@ namespace BancDelTempsOnline
                     usuarisList[ofertaTencada.Demandant.PrimaryKey].OfertesTencades.Elimina(ofertaTencada);
                 if (usuarisList[ofertaTencada.Ofert.PrimaryKey].OfertesTencades.ExisteObjeto(ofertaTencada))
                     usuarisList[ofertaTencada.Ofert.PrimaryKey].OfertesTencades.Elimina(ofertaTencada);
-            }//per acabar de posar els nous
+            }
+            else if(obj is UsuariPerLaOferta)
+            {
+                usuariPerLaOferta = (UsuariPerLaOferta)obj;
+                ofertesActivesList[usuariPerLaOferta.Oferta.PrimaryKey].UsuarisPerLaOferta.EliminaObjeto(usuariPerLaOferta);
+            }
+            //per acabar de posar els nous
 
         }
         //aqui es posa totes les llistes que hi hagi per poder accedir a elles facilment
@@ -218,7 +241,8 @@ namespace BancDelTempsOnline
         #region implemented abstract members of ControlObjectesSql
 
         protected override void Restaurar()
-        {//per acabar de posar els nous
+        {
+            //per acabar de posar els nous
             Missatge[] missatges;
             Usuari[] usuaris;
             CertificatUsuari[] certificatsUsuari;
@@ -227,25 +251,47 @@ namespace BancDelTempsOnline
             MunicipiQueVolAnar[] municipisQueVolAnar;
             Certificat[] certificats;
             Servei[] serveis;
+            OfertaTencada[] ofertesTencades;
+            OfertaActiva[] ofertesActives;
+            UsuariPerLaOferta[] usuarisOferets;
+            Fitxer[] fitxers = Fitxer.TaulaToFitxers(BaseDeDades.ConsultaTableDirect(Fitxer.TAULA));
 
-            usuaris = Usuari.TaulaToUsuariArray(BaseDeDades.ConsultaTableDirect(Usuari.TAULA));
+            certificatsList = new LlistaOrdenada<string, Certificat>();
+            serveisList = new LlistaOrdenada<string, Servei>();
+            usuarisList = new LlistaOrdenada<string, Usuari>();
+            missatgesList = new LlistaOrdenada<string, Missatge>();
+            fitxersList = new LlistaOrdenada<string, Fitxer>();
+            ofertesActivesList = new LlistaOrdenada<string, OfertaActiva>();
+            for (int i = 0; i < fitxers.Length; i++)
+                this.fitxersList.Afegir(fitxers[i].PrimaryKey, fitxers[i]);
+            usuaris = Usuari.TaulaToUsuaris(BaseDeDades.ConsultaTableDirect(Usuari.TAULA),this.fitxersList);
             for (int i = 0; i < usuaris.Length; i++)
                 usuarisList.Afegir(usuaris[i].NIE, usuaris[i]);
 
-            certificats = Certificat.TaulaToCertificatsArray(BaseDeDades.ConsultaTableDirect(Certificat.TAULA), usuarisList);
-            serveis = Servei.TaulaToServeisArray(BaseDeDades.ConsultaTableDirect(Servei.TAULA), usuarisList);
+            certificats = Certificat.TaulaToCertificats(BaseDeDades.ConsultaTableDirect(Certificat.TAULA), usuarisList);
+            serveis = Servei.TaulaToServeis(BaseDeDades.ConsultaTableDirect(Servei.TAULA), usuarisList,this.fitxersList);
 
             for (int i = 0; i < certificats.Length; i++)
                 certificatsList.Afegir(certificats[i].Nom, certificats[i]);
             for (int i = 0; i < serveis.Length; i++)
                 serveisList.Afegir(serveis[i].Nom, serveis[i]);
-            certificatsUsuari = CertificatUsuari.TaulaToServeisUsuarisArray(BaseDeDades.ConsultaTableDirect(CertificatUsuari.TAULA), usuarisList, certificatsList);
-            serveisCertificat = ServeiCertificat.TaulaToServeisCertificatsArray(BaseDeDades.ConsultaTableDirect(ServeiCertificat.TAULA), usuarisList, serveisList, certificatsList);
-            serveisUsuaris = ServeiUsuari.TaulaToServeisUsuarisArray(BaseDeDades.ConsultaTableDirect(ServeiUsuari.TAULA), serveisList, usuarisList);
+            certificatsUsuari = CertificatUsuari.TaulaToServeisUsuaris(BaseDeDades.ConsultaTableDirect(CertificatUsuari.TAULA), usuarisList, certificatsList);
+            serveisCertificat = ServeiCertificat.TaulaToServeisCertificats(BaseDeDades.ConsultaTableDirect(ServeiCertificat.TAULA), usuarisList, serveisList, certificatsList);
+            serveisUsuaris = ServeiUsuari.TaulaToServeisUsuaris(BaseDeDades.ConsultaTableDirect(ServeiUsuari.TAULA), serveisList, usuarisList);
             municipisQueVolAnar = MunicipiQueVolAnar.TaulaToMunicipisQueVolAnar(BaseDeDades.ConsultaTableDirect(MunicipiQueVolAnar.TAULA), usuarisList);
-            missatges = Missatge.TaulaToMissatges(BaseDeDades.ConsultaTableDirect(Missatge.TAULA), usuarisList);
+            missatges = Missatge.TaulaToMissatges(BaseDeDades.ConsultaTableDirect(Missatge.TAULA), usuarisList,this.fitxersList);
+            ofertesTencades = OfertaTencada.TaulaToOfertesTencades(BaseDeDades.ConsultaTableDirect(OfertaTencada.TAULA), usuarisList);
+            usuarisOferets = UsuariPerLaOferta.TaulaToUsuarisPerLaOfertes(BaseDeDades.ConsultaTableDirect(UsuariPerLaOferta.TAULA), usuarisList);//nomes tenen el id de la oferta cal completar
+            ofertesActives = OfertaActiva.TaulaToOfertesActives(BaseDeDades.ConsultaTableDirect(OfertaActiva.TAULA), usuarisList,usuarisOferets,serveisList, fitxersList);//es mes complexa!!
+            for (int i = 0; i < ofertesActives.Length; i++)
+                ofertesActivesList.Afegir(ofertesActives[i].PrimaryKey, ofertesActives[i]);
+            UsuariPerLaOferta.PosaOfertes(usuarisOferets, ofertesActivesList);//poso els objectes on toca :)
             //falta la part dels permisos i de la web
             //poso els objectes a la base de dades
+            base.Afegir(usuarisOferets);
+            base.Afegir(fitxers);
+            base.Afegir(ofertesActives);
+            base.Afegir(ofertesTencades);
             base.Afegir(missatges);
             base.Afegir(usuaris);
             base.Afegir(certificats);

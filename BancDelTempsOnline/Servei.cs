@@ -23,7 +23,7 @@ namespace BancDelTempsOnline
         public const string TAULA="Serveis";
         public const string CAMPPRIMARYKEY = "Id";
 		string nom;
-		string imatge;
+		Fitxer imatge;
 		string descripció;
         string localIdUnic;
         Usuari quiHoVaAfegir;
@@ -36,12 +36,11 @@ namespace BancDelTempsOnline
         /// <param name="imatge">string formada dels bytes de la imatge en format JPG</param>
         /// <param name="descripció"></param>
         /// <param name="quiHoVaAfegir"></param>
-        public Servei(string nom, string imatge, string descripció, Usuari quiHoVaAfegir) : this("", nom, imatge, descripció, quiHoVaAfegir) { }
-		private Servei(string id,string nom,string imatge,string descripció,Usuari quiHoVaAfegir):base(TAULA,id,CampsServei.Id.ToString())
+        public Servei(string nom, Fitxer imatge, string descripció, Usuari quiHoVaAfegir) : this("", nom, imatge, descripció, quiHoVaAfegir) { }
+		private Servei(string id,string nom,Fitxer imatge,string descripció,Usuari quiHoVaAfegir):base(TAULA,id,CampsServei.Id.ToString())
 		{
-            if (imatge == null) imatge = "";
             if (descripció == null) descripció = "";
-            if (imatge.Length > TAMANYIMATGE|| descripció.Length > TAMANYDESCRIPCIO)
+            if (imatge!=null&&imatge.Dades.Length > TAMANYIMATGE|| descripció.Length > TAMANYDESCRIPCIO)
                 throw new ArgumentException("S'ha superat el tamany maxim");
             if (quiHoVaAfegir == null|nom==null)
                 throw new NullReferenceException();
@@ -62,18 +61,19 @@ namespace BancDelTempsOnline
 				CanviString(CampsServei.Nom.ToString(), nom);
 			}
 		}
-        /// <summary>
-        /// Cadena que representa una imatge en bytes en format JPG no superior al maxim
-        /// </summary>
-		public string Imatge {
+
+		public Fitxer Imatge {
 			get{ return imatge; }
 			set{
-                if (value == null) value = "";
-                if (value.Length > TAMANYIMATGE)
+                if (value!=null&&value.Dades.Length > TAMANYIMATGE)
                     throw new ArgumentException("S'ha superat el tamany maxim");
                 imatge = value;
-				CanviString(CampsServei.Imatge.ToString(), imatge);
-			}
+                if (imatge != null)
+                    CanviString(CampsServei.Imatge.ToString(), imatge.PrimaryKey);
+                else
+                    CanviString(CampsServei.Imatge.ToString(), null);
+
+            }
 		}
 
 		public string Descripció {
@@ -108,7 +108,7 @@ namespace BancDelTempsOnline
 
         public override string StringInsertSql(TipusBaseDeDades tipusBD)
 		{
-			return "Insert into "+Taula+"("+CampsServei.Nom.ToString()+"," + CampsServei.Imatge.ToString() + "," + CampsServei.Descripcio.ToString() + "," + CampsServei.QuiHoVaAfegirId.ToString() + ") values('"+Nom+"','"+Imatge+"','"+Descripció+"','"+QuiHoVaAfegir.PrimaryKey+"');";
+			return "Insert into "+Taula+"("+CampsServei.Nom.ToString()+"," + CampsServei.Imatge.ToString() + "," + CampsServei.Descripcio.ToString() + "," + CampsServei.QuiHoVaAfegirId.ToString() + ") values('"+Nom+"',"+(Imatge!=null?"'"+Imatge.PrimaryKey+"'":"null")+",'"+Descripció+"','"+QuiHoVaAfegir.PrimaryKey+"');";
 		}
 
 
@@ -137,18 +137,18 @@ namespace BancDelTempsOnline
 		public static string StringCreateTable()
 		{
 			string sentencia="create table "+TAULA+" (";
-            sentencia += CampsServei.Id.ToString() + " int NOT NULL AUTO_INCREMENT,";
+            sentencia += CampsServei.Id.ToString() + " int  AUTO_INCREMENT primarykey,";
             sentencia += CampsServei.Nom.ToString() + " varchar(25) NOT NULL,";
-			sentencia+= CampsServei.Imatge.ToString() + " varchar(" + TAMANYIMATGE+"),";
+			sentencia+= CampsServei.Imatge.ToString() + " int references "+Fitxer.TAULA+"("+Fitxer.CAMPPRIMARYKEY+"),";
 			sentencia+= CampsServei.Descripcio.ToString() + " varchar("+TAMANYDESCRIPCIO+"),";
             sentencia += CampsServei.QuiHoVaAfegirId.ToString() + " varchar(10) references " + Usuari.TAULA + "(" + Usuari.CAMPPRIMARYKEY + "));";
 			return sentencia;
 		}
-        public static Servei[] TaulaToServeisArray(string[,] taulaServeis,LlistaOrdenada<string,Usuari> usuaris)
+        public static Servei[] TaulaToServeis(string[,] taulaServeis,LlistaOrdenada<string,Usuari> usuaris,LlistaOrdenada<string,Fitxer> fitxers)
         {
             Servei[] serveis = new Servei[taulaServeis.GetLength(DimensionMatriz.Fila)];
             for(int i=0;i<serveis.Length;i++)
-                serveis[i]=new Servei(taulaServeis[(int)CampsServei.Id,i],taulaServeis[(int)CampsServei.Nom,i],taulaServeis[(int)CampsServei.Imatge, i],taulaServeis[(int)CampsServei.Descripcio, i],usuaris[taulaServeis[(int)CampsServei.QuiHoVaAfegirId, i]]);
+                serveis[i]=new Servei(taulaServeis[(int)CampsServei.Id,i],taulaServeis[(int)CampsServei.Nom,i],fitxers[taulaServeis[(int)CampsServei.Imatge, i]],taulaServeis[(int)CampsServei.Descripcio, i],usuaris[taulaServeis[(int)CampsServei.QuiHoVaAfegirId, i]]);
             return serveis;
         }
 
@@ -261,7 +261,7 @@ namespace BancDelTempsOnline
         /// <param name="serveis"></param>
         /// <param name="usuaris"></param>
         /// <returns></returns>
-        public static ServeiUsuari[] TaulaToServeisUsuarisArray(string[,] taulaServeisUsuaris, LlistaOrdenada<string, Servei> serveis, LlistaOrdenada<string, Usuari> usuaris)
+        public static ServeiUsuari[] TaulaToServeisUsuaris(string[,] taulaServeisUsuaris, LlistaOrdenada<string, Servei> serveis, LlistaOrdenada<string, Usuari> usuaris)
         {
             ServeiUsuari[] serveisUsuaris = new ServeiUsuari[taulaServeisUsuaris.GetLength(DimensionMatriz.Fila)];
             for(int i=0;i<serveisUsuaris.Length;i++)
@@ -277,7 +277,7 @@ namespace BancDelTempsOnline
         public static string StringCreateTable()
 		{
 			string sentencia="create table "+TAULA+"(";
-			sentencia+=CampsServeiUsuari.Id.ToString()+" int NOT NULL AUTO_INCREMENT,";
+			sentencia+=CampsServeiUsuari.Id.ToString()+" int  AUTO_INCREMENT primaryKey,";
 			sentencia+= CampsServeiUsuari.ServeiId.ToString() + " int NOT NULL references " + Servei.TAULA + "(" + Servei.CAMPPRIMARYKEY + "),";
 			sentencia+= CampsServeiUsuari.UsuariId.ToString() + " varchar(10) NOT NULL references " + Usuari.TAULA + "(" + Usuari.CAMPPRIMARYKEY + "),";
             sentencia += CampsServeiUsuari.QuiHoVaComprobarId.ToString() + " varchar(10)  references " + Usuari.TAULA+"("+Usuari.CAMPPRIMARYKEY+"),";

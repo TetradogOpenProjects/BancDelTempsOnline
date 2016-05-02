@@ -32,7 +32,7 @@ namespace BancDelTempsOnline
         //atributs clase
         int numSoci;
 		string nom;
-		string imatgePerfil;
+		Fitxer imatgePerfil;
 		string municipi;
         string telefon;
 		string email;
@@ -48,6 +48,7 @@ namespace BancDelTempsOnline
         LlistaOrdenada<Usuari, ListaUnica<Missatge>> missatgesEnviats;
         LlistaOrdenada<Usuari, ListaUnica<Missatge>> missatgesRebuts;
         ListaUnica<OfertaTencada> ofertesTencades;
+        ListaUnica<OfertaActiva> ofertesActives;
         Usuari quiHoVaFormalitzar;
 		//usuari donat d'alta
         /// <summary>
@@ -64,7 +65,7 @@ namespace BancDelTempsOnline
         /// <param name="dataInscripcioFormal"></param>
         /// <param name="dataRegistre"></param>
         /// <param name="quiHoVaFormalitzar"></param>
-		public Usuari(int numSoci,string nom,string imatgePerfil,string municipi,string nie,string telefon,string email,bool actiu,DateTime dataInscripcioFormal,DateTime dataRegistre,Usuari quiHoVaFormalitzar)
+		public Usuari(int numSoci,string nom,Fitxer imatgePerfil,string municipi,string nie,string telefon,string email,bool actiu,DateTime dataInscripcioFormal,DateTime dataRegistre,Usuari quiHoVaFormalitzar)
 			:base(TAULA,nie,CAMPPRIMARYKEY)
 		{
            
@@ -96,16 +97,19 @@ namespace BancDelTempsOnline
             missatgesEnviats = new LlistaOrdenada<Usuari, ListaUnica<Missatge>>();
             missatgesRebuts = new LlistaOrdenada<Usuari, ListaUnica<Missatge>>();
             ofertesTencades = new ListaUnica<OfertaTencada>();
+            ofertesActives = new ListaUnica<OfertaActiva>();
 		}
 		//usuari registrat sense donar d'alta: per tant no esta activat ni te una data d'inscripcio formal!
-		public Usuari(string nom,string uriImatgePerfil,string municipi,string nie,string telefon,string email,DateTime dataRegistre)
-			:this(SOCIPENDENT,nom,uriImatgePerfil,municipi,nie,telefon,email,false,default(DateTime),dataRegistre,null){} 
+		public Usuari(string nom,Fitxer imatgePerfil,string municipi,string nie,string telefon,string email,DateTime dataRegistre)
+			:this(SOCIPENDENT,nom,imatgePerfil,municipi,nie,telefon,email,false,default(DateTime),dataRegistre,null){} 
 		//nou registre:no esta activat,ni te data d'inscripcio i l'hora del registre es el moment quan ho fa
-				public Usuari(string nom,string uriImatgePerfil,string municipi,string nie,string telefon,string email)
-					:this(SOCIPENDENT,nom,uriImatgePerfil,municipi,nie,telefon,email,false,default(DateTime),DateTime.Now,null){}
+				public Usuari(string nom,Fitxer imatgePerfil,string municipi,string nie,string telefon,string email)
+					:this(SOCIPENDENT,nom,imatgePerfil,municipi,nie,telefon,email,false,default(DateTime),DateTime.Now,null){}
 		#region Propietats
         public ListaUnica<OfertaTencada> OfertesTencades
         { get { return ofertesTencades; } }
+        public ListaUnica<OfertaActiva> OfertesActives
+        { get { return ofertesActives; } }
         public ListaUnica<CertificatUsuari> Certificats
         {
             get { return certificats; }
@@ -132,14 +136,17 @@ namespace BancDelTempsOnline
         /// <summary>
         /// string formada dels bytes de la imatge en format JPG
         /// </summary>
-		public string ImatgePerfil {
+		public Fitxer ImatgePerfil {
 			get{ return imatgePerfil; }
 			set{
-                if (value.Length > TAMANYIMATGEPERFIL)
+                if (value!=null&&value.Dades.Length > TAMANYIMATGEPERFIL)
                     throw new ArgumentException("S'ha superat el maxim de longitud");
                 imatgePerfil = value;
-				CanviString(CampsUsuari.ImatgePerfil.ToString(), ImatgePerfil);
-			}
+                if(imatgePerfil!=null)
+				    CanviString(CampsUsuari.ImatgePerfil.ToString(), ImatgePerfil.PrimaryKey);
+                else
+                    CanviString(CampsUsuari.ImatgePerfil.ToString(),null);
+            }
 		}
 		public string Municipi {
 			get{ return municipi; }
@@ -248,10 +255,10 @@ namespace BancDelTempsOnline
 			sentencia+="'"+Municipi+"',";
 			sentencia+="'"+Email+"',";
 			sentencia+="'"+Actiu+"',";
-			sentencia+="'"+ImatgePerfil+"',";
+			sentencia+=(ImatgePerfil!=null?ImatgePerfil.PrimaryKey:"NULL")+",";
 			sentencia+=ObjecteSql.DateTimeToStringSQL(tipusBD,DataRegistre)+",";
 			sentencia+=ObjecteSql.DateTimeToStringSQL(tipusBD,DataInscripcioFormal)+",";
-            sentencia += "'" + (quiHoVaFormalitzar != null ? quiHoVaFormalitzar.PrimaryKey : "") + "');";
+            sentencia +=  (quiHoVaFormalitzar != null ? "'" + quiHoVaFormalitzar.PrimaryKey+ "'"  : "null") + ");";
 			return sentencia;
 		}
 
@@ -381,19 +388,19 @@ namespace BancDelTempsOnline
             sentencia += CampsUsuari.Municipi.ToString() + " varchar("+MunicipiQueVolAnar.TAMANYNOMMUNICIPI+") NOT NULL,";
             sentencia += CampsUsuari.Email.ToString() + " varchar("+TAMANYEMAIL+") unique,";
             sentencia += CampsUsuari.Actiu.ToString() + " varchar(5) NOT NULL,";
-            sentencia +=CampsUsuari.ImatgePerfil.ToString()+" varchar("+TAMANYIMATGEPERFIL+"),";
+            sentencia +=CampsUsuari.ImatgePerfil.ToString()+" int references "+Fitxer.TAULA+"("+Fitxer.CAMPPRIMARYKEY+"),";
             sentencia += CampsUsuari.DataRegistre.ToString() + " date Not NULL,";
             sentencia += CampsUsuari.DataInscripcioFormal.ToString() + " date Not NULL,";
             sentencia += CampsUsuari.QuiHoVaFormalitzar.ToString() + " varchar(10) "+Usuari.TAULA+"("+Usuari.CAMPPRIMARYKEY+")"+");";
             return sentencia;
         }
-        public static Usuari[] TaulaToUsuariArray(string[,] taulaUsuaris)
+        public static Usuari[] TaulaToUsuaris(string[,] taulaUsuaris,LlistaOrdenada<string,Fitxer> fitxers)
         {
             Usuari[] usuaris = new Usuari[taulaUsuaris.GetLength(DimensionMatriz.Fila)];
             SortedList<string, Usuari> usuarisList = new SortedList<string, Usuari>();
             for (int i = 0; i < usuaris.Length; i++)
             {
-                usuaris[i] = new Usuari(Convert.ToInt32(taulaUsuaris[(int)CampsUsuari.NumSoci, i]), taulaUsuaris[(int)CampsUsuari.Nom, i], taulaUsuaris[(int)CampsUsuari.ImatgePerfil, i], taulaUsuaris[(int)CampsUsuari.Municipi, i], taulaUsuaris[(int)CampsUsuari.NIE, i], taulaUsuaris[(int)CampsUsuari.Telefon, i], taulaUsuaris[(int)CampsUsuari.Email, i], Convert.ToBoolean(taulaUsuaris[(int)CampsUsuari.Actiu, i]), ObjecteSql.StringToDateTime(taulaUsuaris[(int)CampsUsuari.DataRegistre, i]), ObjecteSql.StringToDateTime(taulaUsuaris[(int)CampsUsuari.DataInscripcioFormal, i]),null);
+                usuaris[i] = new Usuari(Convert.ToInt32(taulaUsuaris[(int)CampsUsuari.NumSoci, i]), taulaUsuaris[(int)CampsUsuari.Nom, i],fitxers[taulaUsuaris[(int)CampsUsuari.ImatgePerfil, i]], taulaUsuaris[(int)CampsUsuari.Municipi, i], taulaUsuaris[(int)CampsUsuari.NIE, i], taulaUsuaris[(int)CampsUsuari.Telefon, i], taulaUsuaris[(int)CampsUsuari.Email, i], Convert.ToBoolean(taulaUsuaris[(int)CampsUsuari.Actiu, i]), ObjecteSql.StringToDateTime(taulaUsuaris[(int)CampsUsuari.DataRegistre, i]), ObjecteSql.StringToDateTime(taulaUsuaris[(int)CampsUsuari.DataInscripcioFormal, i]),null);
                 usuarisList.Add(usuaris[i].PrimaryKey, usuaris[i]);
             }
             //poso qui ho va formalitzar

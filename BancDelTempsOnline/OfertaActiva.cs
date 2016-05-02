@@ -1,4 +1,5 @@
 ﻿using Gabriel.Cat;
+using Gabriel.Cat.Extension;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -25,8 +26,8 @@ namespace BancDelTempsOnline
         public const int MAXLONGITUDIMATGEOFERTA = 250 * 1024;//250KB
         string idLocal;//es per poder posarlo en llistes hash i no tenir problemes ja que es un valor fix
         Usuari demandant;
-        ListaUnica<Usuari> oferits;//fer taula per a ells i nova clase!!
-        ListaUnica<Usuari> proposats;//fer taula per a ells i nova clase!!
+        ListaUnica<UsuariPerLaOferta> usuarisPerLaOferta;//fer taula per a ells i nova clase!!
+
         DateTime inici;
         string titol;//si no hi ha el servei s'utilitzarà el titol
         Servei serveiDemanat;
@@ -37,9 +38,9 @@ namespace BancDelTempsOnline
         Llista<Fitxer> documentsAdjunts;//desso la string :)
 
 
-        public OfertaActiva(Usuari demandant, DateTime inici, string titol, Servei servei, string descripcio, Fitxer imatgeOferta, Fitxer[] archiusAdjuntats) : this("", demandant,inici, titol, servei, descripcio, imatgeOferta, archiusAdjuntats,null,null,null) { }
+        public OfertaActiva(Usuari demandant, DateTime inici, string titol, Servei servei, string descripcio, Fitxer imatgeOferta, Fitxer[] archiusAdjuntats) : this("", demandant,inici, titol, servei, descripcio, imatgeOferta, archiusAdjuntats,null,null) { }
         //camp documents adjunts
-        private OfertaActiva(string id,Usuari demandant,DateTime inici,string titol,Servei servei,string descripcio,Fitxer imatgeOferta, Fitxer[] archiusAdjuntats,Usuari quiHaValidat,Usuari[] oferits,Usuari[] proposats):base(TAULA,id,CAMPPRYMARYKEY)
+        private OfertaActiva(string id,Usuari demandant,DateTime inici,string titol,Servei servei,string descripcio,Fitxer imatgeOferta, Fitxer[] archiusAdjuntats,Usuari quiHaValidat,UsuariPerLaOferta[] usuarisOferta) :base(TAULA,id,CAMPPRYMARYKEY)
         {
             AltaCanvi(CampsOfertaActiva.Demandant.ToString());
             AltaCanvi(CampsOfertaActiva.Titol.ToString());
@@ -49,15 +50,10 @@ namespace BancDelTempsOnline
             AltaCanvi(CampsOfertaActiva.Urgencia.ToString());
             AltaCanvi(CampsOfertaActiva.QuiHaValidat.ToString());
             AltaCanvi(CampsOfertaActiva.Inici.ToString());
-            this.oferits = new ListaUnica<Usuari>();
-            this.proposats = new ListaUnica<Usuari>();
+
             documentsAdjunts = new Llista<Fitxer>();
             if (archiusAdjuntats != null)
                 documentsAdjunts.AfegirMolts(archiusAdjuntats);
-            if (oferits != null)
-                this.oferits.Añadir(oferits);
-            if (proposats != null)
-                this.proposats.Añadir(proposats);
             this.quiHaValidat = quiHaValidat;
             this.demandant = demandant;
             this.titol = titol;
@@ -65,7 +61,9 @@ namespace BancDelTempsOnline
             this.descripcio = descripcio;
             this.imatgeOferta = imatgeOferta;
             idLocal = MiRandom.Next() + "" + DateTime.Now.Ticks;
-           
+            usuarisPerLaOferta = new ListaUnica<UsuariPerLaOferta>();
+            if (usuarisOferta != null)
+                usuarisPerLaOferta.Añadir(usuarisOferta);
         }
         public Usuari Demandant
         {
@@ -83,23 +81,15 @@ namespace BancDelTempsOnline
             }
         }
 
-        public ListaUnica<Usuari> Oferits
+        public ListaUnica<UsuariPerLaOferta> UsuarisPerLaOferta
         {
             get
             {
-                return oferits;
+                return usuarisPerLaOferta;
             }
 
         }
 
-        public ListaUnica<Usuari> Proposats
-        {
-            get
-            {
-                return proposats;
-            }
-
-        }
 
         public DateTime Inici
         {
@@ -250,7 +240,169 @@ namespace BancDelTempsOnline
 
         public override string StringInsertSql(TipusBaseDeDades tipusBD)
         {//posar nomes el id del archiu ja que les dades es desaran a la taula d'arxius
-            throw new NotImplementedException();
+            string sentencia = "insert into " + TAULA + "(" + CampsOfertaActiva.Demandant.ToString() + "," + CampsOfertaActiva.Titol.ToString() + "," + CampsOfertaActiva.Urgencia.ToString() + "," + CampsOfertaActiva.Descripcio.ToString() + "," + CampsOfertaActiva.ImatgeOferta.ToString() + "," + CampsOfertaActiva.Inici.ToString() + "," + CampsOfertaActiva.QuiHaValidat.ToString() + ") values(";
+            sentencia += "'" + Demandant.PrimaryKey + "',";
+            sentencia += "'" + Titol + "'";
+            sentencia += "'" + NivellUrgencia.ToString() + "',";
+            sentencia += "'" + Descripcio + "',";
+            sentencia += (ImatgeOferta!=null?ImatgeOferta.PrimaryKey:"null") + ",";
+            sentencia += ObjecteSql.DateTimeToStringSQL(tipusBD, Inici);
+            sentencia += "" + (QuiHaValidat != null ? "'" + QuiHaValidat.PrimaryKey + "'" : "null") + ");";
+            return sentencia;
         }
+        public static string StringCreateTable()
+        {
+            string sentencia = "create table " + TAULA + " (";
+            sentencia += CampsOfertaActiva.Id.ToString() + " int Auto_Increment primarykey,";
+            sentencia += CampsOfertaActiva.Demandant.ToString() + " varchar(10) not null references " + Usuari.TAULA + "(" + Usuari.CAMPPRIMARYKEY + "),";
+            sentencia += CampsOfertaActiva.Titol.ToString() + " varchar(" + MAXLONGITUDTITOL + ") not null,";
+            sentencia += CampsOfertaActiva.Urgencia.ToString() + " varchar(15) not null,";
+            sentencia += CampsOfertaActiva.Descripcio.ToString() + " varchar(" + MAXLONGITUDDESCRIPCIO + ") not null,";
+            sentencia += CampsOfertaActiva.ImatgeOferta.ToString() + " int references " + Fitxer.TAULA + "(" + Fitxer.CAMPPRIMARYKEY + "),";
+            sentencia += CampsOfertaActiva.Inici.ToString() + " date not null,";
+            sentencia+=CampsOfertaActiva.QuiHaValidat.ToString()+" varchar(10) references " + Usuari.TAULA + "(" + Usuari.CAMPPRIMARYKEY + "));";
+            return sentencia;
+        }
+
+        public static OfertaActiva[] TaulaToOfertesActives(string[,] taulaOfertesActives, LlistaOrdenada<string, Usuari> usuarisList,UsuariPerLaOferta[] usuarisOferts, LlistaOrdenada<string, Servei> serveis, LlistaOrdenada<string, Fitxer> fitxers)
+        {
+            OfertaActiva[] ofertesActives = new OfertaActiva[taulaOfertesActives.GetLength(DimensionMatriz.Fila)];
+            for (int i = 0; i < ofertesActives.Length; i++)
+            {
+                ofertesActives[i] = new OfertaActiva(taulaOfertesActives[(int)CampsOfertaActiva.Id, i], usuarisList[taulaOfertesActives[(int)CampsOfertaActiva.Demandant, i]],ObjecteSql.StringToDateTime(taulaOfertesActives[(int)CampsOfertaActiva.Inici, i]), taulaOfertesActives[(int)CampsOfertaActiva.Titol, i], serveis[taulaOfertesActives[(int)CampsOfertaActiva.ServeiSolicitat, i]], taulaOfertesActives[(int)CampsOfertaActiva.Descripcio, i], fitxers[taulaOfertesActives[(int)CampsOfertaActiva.ImatgeOferta, i]],fitxers.Filtra((fitxer)=> { return fitxer.Value.IdOnSutilitza == taulaOfertesActives[(int)CampsOfertaActiva.Id, i]; }).ValuesToArray(),usuarisList[taulaOfertesActives[(int)CampsOfertaActiva.QuiHaValidat,i]],usuarisOferts.Filtra((usuariOfert)=> { return usuariOfert.OfertaId == taulaOfertesActives[(int)CampsOfertaActiva.Id, i]; }).ToArray());
+                usuarisList[ofertesActives[i].Demandant.PrimaryKey].OfertesActives.Añadir(ofertesActives[i]);
+            }
+            return ofertesActives;
+        }
+    }
+    public class UsuariPerLaOferta:ObjecteSqlIdAuto,IClauUnicaPerObjecte
+    {
+       public  enum ComEsVaAfegir
+        {
+            Interesantse,Propusat
+        }
+        enum CampsUsuariPerLaOferta
+        {
+            Id,OfertaId,UsuariId,ComVanAfegirse,Data
+        }
+        public const string TAULA = "UsuarisPerLaOferta";
+        public const string CAMPPRIMARYKEY = "Id";
+        OfertaActiva oferta;
+        ComEsVaAfegir comVanAfegirse;
+        Usuari usuariAfegit;
+        DateTime dataAfegit;
+        string idLocal;
+        public UsuariPerLaOferta(OfertaActiva oferta, Usuari usuari, ComEsVaAfegir comEsVaAfegir, DateTime data) : this("", oferta, usuari, comEsVaAfegir, data) { }
+        private UsuariPerLaOferta(string id,OfertaActiva oferta,Usuari usuari,ComEsVaAfegir comEsVaAfegir,DateTime data):base(TAULA,id,CAMPPRIMARYKEY)
+        {
+            base.AltaCanvi(CampsUsuariPerLaOferta.OfertaId.ToString());
+            base.AltaCanvi(CampsUsuariPerLaOferta.UsuariId.ToString());
+            base.AltaCanvi(CampsUsuariPerLaOferta.ComVanAfegirse.ToString());
+            base.AltaCanvi(CampsUsuariPerLaOferta.Data.ToString());
+            this.oferta=oferta;
+            if (oferta != null) this.OfertaId = oferta.PrimaryKey;
+            this.comVanAfegirse=comEsVaAfegir;
+            this.usuariAfegit=usuari;
+            this.dataAfegit=data;
+            idLocal = MiRandom.Next() + "" + DateTime.Now.Ticks;
+        }
+        public OfertaActiva Oferta
+        {
+            get
+            {
+                return oferta;
+            }
+
+            set
+            {
+                if (value == null) throw new ArgumentNullException();
+                oferta = value;
+                OfertaId = oferta.PrimaryKey;
+                CanviString(CampsUsuariPerLaOferta.OfertaId.ToString(), oferta.PrimaryKey);
+            }
+        }
+
+        public ComEsVaAfegir ComVanAfegirse
+        {
+            get
+            {
+                return comVanAfegirse;
+            }
+
+            set
+            {
+                comVanAfegirse = value;
+                CanviString(CampsUsuariPerLaOferta.ComVanAfegirse.ToString(), comVanAfegirse.ToString());
+            }
+        }
+
+        public Usuari UsuariAfegit
+        {
+            get
+            {
+                return usuariAfegit;
+            }
+
+            set
+            {
+                if (value == null) throw new ArgumentNullException();
+                usuariAfegit = value;
+                CanviString(CampsUsuariPerLaOferta.UsuariId.ToString(), usuariAfegit.PrimaryKey);
+            }
+        }
+
+        public DateTime DataAfegit
+        {
+            get
+            {
+                return dataAfegit;
+            }
+
+            set
+            {
+                dataAfegit = value;
+                CanviData(CampsUsuariPerLaOferta.Data.ToString(), dataAfegit);
+            }
+        }
+        public IComparable Clau()
+        {
+            return idLocal;
+        }
+        public string OfertaId { get; private set; }
+
+        public override string StringInsertSql(TipusBaseDeDades tipusBD)
+        {
+            string sentencia = "insert into " + TAULA + "(" + CampsUsuariPerLaOferta.OfertaId.ToString() + "," + CampsUsuariPerLaOferta.UsuariId.ToString() + "," + CampsUsuariPerLaOferta.ComVanAfegirse.ToString() + "," + CampsUsuariPerLaOferta.Data.ToString() + ") values(";
+            sentencia += "'" + Oferta.PrimaryKey + "',";
+            sentencia += "'" + UsuariAfegit.PrimaryKey + "',";
+            sentencia += "'" + ComVanAfegirse.ToString() + "',";
+            sentencia += ObjecteSql.DateTimeToStringSQL(tipusBD, dataAfegit)+");";
+            return sentencia;
+        }
+        public static string StringCreateTable()
+        {
+            string sentencia = "create table " + TAULA + "(";
+            sentencia += CampsUsuariPerLaOferta.Id.ToString() + " int Auto_Increment primarykey,";
+            sentencia += CampsUsuariPerLaOferta.OfertaId.ToString() + " int not null references " + OfertaActiva.TAULA + "(" + OfertaActiva.CAMPPRYMARYKEY + "),";
+            sentencia += CampsUsuariPerLaOferta.UsuariId.ToString() + " varchar(10) not null references " + Usuari.TAULA + "(" + Usuari.CAMPPRIMARYKEY + "),";
+            sentencia += CampsUsuariPerLaOferta.ComVanAfegirse.ToString() + " varchar(15) not null,";
+            sentencia += CampsUsuariPerLaOferta.Data.ToString() + " date not null);";
+            return sentencia;
+        }
+        public static UsuariPerLaOferta[] TaulaToUsuarisPerLaOfertes(string[,] taulaUsuarisPerLaOfera,LlistaOrdenada<string,Usuari> usuarisList)
+        {
+            UsuariPerLaOferta[] usuarisPerLesOfertes = new UsuariPerLaOferta[taulaUsuarisPerLaOfera.GetLength(DimensionMatriz.Fila)];
+            for(int i=0;i<usuarisPerLesOfertes.Length;i++)
+            {
+                usuarisPerLesOfertes[i] = new UsuariPerLaOferta(taulaUsuarisPerLaOfera[(int)CampsUsuariPerLaOferta.Id, i], null, usuarisList[taulaUsuarisPerLaOfera[(int)CampsUsuariPerLaOferta.UsuariId, i]], (ComEsVaAfegir)Enum.Parse(typeof(ComEsVaAfegir), taulaUsuarisPerLaOfera[(int)CampsUsuariPerLaOferta.ComVanAfegirse, i]), ObjecteSql.StringToDateTime(taulaUsuarisPerLaOfera[(int)CampsUsuariPerLaOferta.Data, i])) { OfertaId = taulaUsuarisPerLaOfera[(int)CampsUsuariPerLaOferta.OfertaId, i] };
+            }
+            return usuarisPerLesOfertes;
+        }
+        public static void PosaOfertes(UsuariPerLaOferta[] usuarisPerLaOferta,LlistaOrdenada<string,OfertaActiva> ofertes)
+        {
+            for (int i = 0; i < usuarisPerLaOferta.Length; i++)
+                usuarisPerLaOferta[i].oferta = ofertes[usuarisPerLaOferta[i].OfertaId];
+        }
+
     }
 }

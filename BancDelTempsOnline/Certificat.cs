@@ -101,7 +101,7 @@ namespace BancDelTempsOnline
             }
             return serveis.ToTaula();
         }
-       public static Certificat[] TaulaToCertificatsArray(string[,] taulaCertificats,LlistaOrdenada<string,Usuari> usuaris)
+       public static Certificat[] TaulaToCertificats(string[,] taulaCertificats,LlistaOrdenada<string,Usuari> usuaris)
         {
             Certificat[] certificats = new Certificat[taulaCertificats.GetLength(DimensionMatriz.Fila)];
             for (int i = 0; i < certificats.Length; i++)
@@ -187,7 +187,7 @@ namespace BancDelTempsOnline
         /// <param name="serveisList"></param>
         /// <param name="certificatsList"></param>
         /// <returns></returns>
-        public static ServeiCertificat[] TaulaToServeisCertificatsArray(string[,] taulaServeisCertificats, LlistaOrdenada<string, Usuari> usuarisList, LlistaOrdenada<string, Servei> serveisList, LlistaOrdenada<string, Certificat> certificatsList)
+        public static ServeiCertificat[] TaulaToServeisCertificats(string[,] taulaServeisCertificats, LlistaOrdenada<string, Usuari> usuarisList, LlistaOrdenada<string, Servei> serveisList, LlistaOrdenada<string, Certificat> certificatsList)
         {
             ServeiCertificat[] serveisCertificat = new ServeiCertificat[taulaServeisCertificats.GetLength(DimensionMatriz.Fila)];
             for(int i=0;i<serveisCertificat.Length;i++)
@@ -202,7 +202,7 @@ namespace BancDelTempsOnline
         public static string StringCreateTable()
 		{
 			string sentencia="create table "+TAULA+"(";
-			sentencia+= CampsServeiCertificat.Id.ToString()+" int NOT NULL AUTO_INCREMENT,";
+			sentencia+= CampsServeiCertificat.Id.ToString()+" int AUTO_INCREMENT primaryKey,";
 			sentencia+= CampsServeiCertificat.CertificatId.ToString() + " int NOT NULL references " + Certificat.TAULA + " (" + Certificat.CAMPPRIMARYKEY + "),";
 			sentencia+= CampsServeiCertificat.ServeiId.ToString() + " int NOT NULL references " + Servei.TAULA + " (" + Servei.CAMPPRIMARYKEY + ")";
             sentencia += CampsServeiCertificat.QuiHoVaAfegir.ToString() + " varchar(10) NOT NULL references " + Usuari.TAULA + " (" + Usuari.CAMPPRIMARYKEY + "));";
@@ -311,14 +311,14 @@ namespace BancDelTempsOnline
 		public static string StringCreateTable()
 		{
 			string sentencia="create table "+TAULA+"(";
-			sentencia+= CampsCertificatUsuari.Id.ToString()+" int NOT NULL AUTO_INCREMENT,";
+			sentencia+= CampsCertificatUsuari.Id.ToString()+" int  AUTO_INCREMENT primarykey,";
 			sentencia+= CampsCertificatUsuari.CertificatId.ToString() + " int NOT NULL references "+Certificat.TAULA+"("+Certificat.CAMPPRIMARYKEY+"),";
 			sentencia+= CampsCertificatUsuari.UsuariId.ToString() + " varchar(10) NOT NULL references " + Usuari.TAULA + "(" + Usuari.CAMPPRIMARYKEY + "),";
             sentencia += CampsCertificatUsuari.QuiHoVaComprobarId.ToString() + " varchar(10) references " + Usuari.TAULA + "(" + Usuari.CAMPPRIMARYKEY + "),";
             sentencia += CampsCertificatUsuari.Activat.ToString() + " varchar(5));";
 			return sentencia;
 		}
-        public static CertificatUsuari[] TaulaToServeisUsuarisArray(string[,] taulaCertificatUsuari,LlistaOrdenada<string,Usuari> usuaris, LlistaOrdenada<string, Certificat> certificats)
+        public static CertificatUsuari[] TaulaToServeisUsuaris(string[,] taulaCertificatUsuari,LlistaOrdenada<string,Usuari> usuaris, LlistaOrdenada<string, Certificat> certificats)
         {
             CertificatUsuari[] certificatsUsuari = new CertificatUsuari[taulaCertificatUsuari.GetLength(DimensionMatriz.Fila)];
             for (int i = 0; i < certificatsUsuari.Length; i++)
