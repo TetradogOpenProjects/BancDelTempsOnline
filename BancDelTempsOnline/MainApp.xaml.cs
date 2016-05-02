@@ -21,6 +21,9 @@ using Gabriel.Cat.Google;
 using Gabriel.Cat;
 using Gabriel.Cat.Extension;
 using Microsoft.SqlServer.Server;
+using System.Drawing;
+using System.IO;
+
 namespace BancDelTempsOnline
 {
 	/// <summary>
@@ -205,12 +208,12 @@ namespace BancDelTempsOnline
 			//trec els camps post i els poso al usuari
 			LlistaOrdenada<string,string> postDataDic = request.PostDataDiccionary(); 
 			string nom = postDataDic["Nom"];
-			string imatgePerfil = postDataDic["ImatgePerfil"];
+			string imatgePerfil = postDataDic["ImatgePerfil"];//pot venir en qualsevol format compatible amb Bitmap :)
 			string municipi = postDataDic["Municipi"];
 			string nie = postDataDic["NIE"];
 			string telefon = postDataDic["Telefon"];
 			string email = postDataDic["Email"];
-			return new Usuari(nom,new Fitxer(nom+"imgPerfil",".jpg",Serializar.GetBytes(imatgePerfil)), municipi, nie, telefon, email);
+			return new Usuari(nom,new Fitxer(nom+"imgPerfil",".jpg",new Bitmap(new MemoryStream(Serializar.GetBytes(imatgePerfil))).ToStream(System.Drawing.Imaging.ImageFormat.Jpeg).GetAllBytes()), municipi, nie, telefon, email);
 		}
 		string PaginaPeticioUsuari(Usuari usuari, System.Net.HttpListenerRequest request)
 		{
