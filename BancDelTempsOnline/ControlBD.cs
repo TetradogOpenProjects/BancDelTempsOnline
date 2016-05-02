@@ -237,11 +237,14 @@ namespace BancDelTempsOnline
         {
             return missatgesList[primaryKey];
         }
-
+        public OfertaActiva ObtéOfertaActiva(string primaryKey)
+        {
+            return ofertesActivesList[primaryKey];
+        }
         #region implemented abstract members of ControlObjectesSql
 
         protected override void Restaurar()
-        {
+        {//falta explicar cada part per no perdres
             //per acabar de posar els nous
             Missatge[] missatges;
             Usuari[] usuaris;

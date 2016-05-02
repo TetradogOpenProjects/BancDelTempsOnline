@@ -205,12 +205,12 @@ namespace BancDelTempsOnline
 			//trec els camps post i els poso al usuari
 			LlistaOrdenada<string,string> postDataDic = request.PostDataDiccionary(); 
 			string nom = postDataDic["Nom"];
-			string uriImatgePerfil = postDataDic["UriImatgePerfil"];
+			string imatgePerfil = postDataDic["ImatgePerfil"];
 			string municipi = postDataDic["Municipi"];
 			string nie = postDataDic["NIE"];
 			string telefon = postDataDic["Telefon"];
 			string email = postDataDic["Email"];
-			return new Usuari(nom, uriImatgePerfil, municipi, nie, telefon, email);
+			return new Usuari(nom,new Fitxer(nom+"imgPerfil",".jpg",Serializar.GetBytes(imatgePerfil)), municipi, nie, telefon, email);
 		}
 		string PaginaPeticioUsuari(Usuari usuari, System.Net.HttpListenerRequest request)
 		{
