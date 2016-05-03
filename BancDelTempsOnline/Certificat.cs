@@ -101,11 +101,11 @@ namespace BancDelTempsOnline
             }
             return serveis.ToTaula();
         }
-       public static Certificat[] TaulaToCertificats(string[,] taulaCertificats,LlistaOrdenada<string,Usuari> usuaris)
+       public static Certificat[] TaulaToCertificats(string[,] taulaCertificats, TwoKeysList<string, string, Usuari> usuaris)
         {
             Certificat[] certificats = new Certificat[taulaCertificats.GetLength(DimensionMatriz.Fila)];
             for (int i = 0; i < certificats.Length; i++)
-                certificats[i] = new Certificat(taulaCertificats[(int)CampsCertificat.Nom, i],usuaris[taulaCertificats[(int)CampsCertificat.QuiHoVaAfegirId, i]]);
+                certificats[i] = new Certificat(taulaCertificats[(int)CampsCertificat.Nom, i],usuaris.ObtainValueWithKey2(taulaCertificats[(int)CampsCertificat.QuiHoVaAfegirId, i]));
             return certificats;
         }
 
@@ -187,12 +187,12 @@ namespace BancDelTempsOnline
         /// <param name="serveisList"></param>
         /// <param name="certificatsList"></param>
         /// <returns></returns>
-        public static ServeiCertificat[] TaulaToServeisCertificats(string[,] taulaServeisCertificats, LlistaOrdenada<string, Usuari> usuarisList, LlistaOrdenada<string, Servei> serveisList, LlistaOrdenada<string, Certificat> certificatsList)
+        public static ServeiCertificat[] TaulaToServeisCertificats(string[,] taulaServeisCertificats, TwoKeysList<string, string, Usuari> usuaris, LlistaOrdenada<string, Servei> serveisList, LlistaOrdenada<string, Certificat> certificatsList)
         {
             ServeiCertificat[] serveisCertificat = new ServeiCertificat[taulaServeisCertificats.GetLength(DimensionMatriz.Fila)];
             for(int i=0;i<serveisCertificat.Length;i++)
             {
-                serveisCertificat[i] = new ServeiCertificat(certificatsList[taulaServeisCertificats[(int)CampsServeiCertificat.CertificatId, i]], serveisList[taulaServeisCertificats[(int)CampsServeiCertificat.ServeiId, i]], usuarisList[taulaServeisCertificats[(int)CampsServeiCertificat.QuiHoVaAfegir, i]]);
+                serveisCertificat[i] = new ServeiCertificat(certificatsList[taulaServeisCertificats[(int)CampsServeiCertificat.CertificatId, i]], serveisList[taulaServeisCertificats[(int)CampsServeiCertificat.ServeiId, i]], usuaris.ObtainValueWithKey2(taulaServeisCertificats[(int)CampsServeiCertificat.QuiHoVaAfegir, i]));
                 //poso el servei a la llista
                 certificatsList[serveisCertificat[i].Certificat.Nom].Serveis.Añadir(serveisCertificat[i]);
             }
@@ -318,12 +318,12 @@ namespace BancDelTempsOnline
             sentencia += CampsCertificatUsuari.Activat.ToString() + " varchar(5));";
 			return sentencia;
 		}
-        public static CertificatUsuari[] TaulaToServeisUsuaris(string[,] taulaCertificatUsuari,LlistaOrdenada<string,Usuari> usuaris, LlistaOrdenada<string, Certificat> certificats)
+        public static CertificatUsuari[] TaulaToServeisUsuaris(string[,] taulaCertificatUsuari,TwoKeysList<string, string, Usuari> usuaris, LlistaOrdenada<string, Certificat> certificats)
         {
             CertificatUsuari[] certificatsUsuari = new CertificatUsuari[taulaCertificatUsuari.GetLength(DimensionMatriz.Fila)];
             for (int i = 0; i < certificatsUsuari.Length; i++)
             {
-                certificatsUsuari[i] = new CertificatUsuari(taulaCertificatUsuari[(int)CampsCertificatUsuari.Id, i], certificats[taulaCertificatUsuari[(int)CampsCertificatUsuari.CertificatId, i]], usuaris[taulaCertificatUsuari[(int)CampsCertificatUsuari.UsuariId, i]],Convert.ToBoolean(taulaCertificatUsuari[(int)CampsCertificatUsuari.Activat, i]), usuaris[taulaCertificatUsuari[(int)CampsCertificatUsuari.QuiHoVaComprobarId, i]]);
+                certificatsUsuari[i] = new CertificatUsuari(taulaCertificatUsuari[(int)CampsCertificatUsuari.Id, i], certificats[taulaCertificatUsuari[(int)CampsCertificatUsuari.CertificatId, i]], usuaris.ObtainValueWithKey2(taulaCertificatUsuari[(int)CampsCertificatUsuari.UsuariId, i]),Convert.ToBoolean(taulaCertificatUsuari[(int)CampsCertificatUsuari.Activat, i]), usuaris.ObtainValueWithKey2(taulaCertificatUsuari[(int)CampsCertificatUsuari.QuiHoVaComprobarId, i]));
 
             }
                 return certificatsUsuari;

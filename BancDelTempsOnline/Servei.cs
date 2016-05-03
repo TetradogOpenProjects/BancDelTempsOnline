@@ -67,6 +67,8 @@ namespace BancDelTempsOnline
 			set{
                 if (value!=null&&value.Dades.Length > TAMANYIMATGE)
                     throw new ArgumentException("S'ha superat el tamany maxim");
+                if (imatge != null)
+                    imatge.OnBaixa();
                 imatge = value;
                 if (imatge != null)
                     CanviString(CampsServei.Imatge.ToString(), imatge.PrimaryKey);
@@ -112,11 +114,15 @@ namespace BancDelTempsOnline
 		}
 
 
-		#endregion
+        #endregion
+        public override void OnBaixa()
+        {
+            base.OnBaixa();
+            Imatge = null;//trec la imatge de la BD
+        }
+        #region IClauUnicaPerObjecte implementation
 
-		#region IClauUnicaPerObjecte implementation
-
-		public IComparable Clau()
+        public IComparable Clau()
 		{
 			return localIdUnic;
 		}
@@ -144,11 +150,11 @@ namespace BancDelTempsOnline
             sentencia += CampsServei.QuiHoVaAfegirId.ToString() + " varchar(10) references " + Usuari.TAULA + "(" + Usuari.CAMPPRIMARYKEY + "));";
 			return sentencia;
 		}
-        public static Servei[] TaulaToServeis(string[,] taulaServeis,LlistaOrdenada<string,Usuari> usuaris,LlistaOrdenada<string,Fitxer> fitxers)
+        public static Servei[] TaulaToServeis(string[,] taulaServeis, TwoKeysList<string, string, Usuari> usuaris, TwoKeysList<string, string, Fitxer> fitxers)
         {
             Servei[] serveis = new Servei[taulaServeis.GetLength(DimensionMatriz.Fila)];
             for(int i=0;i<serveis.Length;i++)
-                serveis[i]=new Servei(taulaServeis[(int)CampsServei.Id,i],taulaServeis[(int)CampsServei.Nom,i],fitxers[taulaServeis[(int)CampsServei.Imatge, i]],taulaServeis[(int)CampsServei.Descripcio, i],usuaris[taulaServeis[(int)CampsServei.QuiHoVaAfegirId, i]]);
+                serveis[i]=new Servei(taulaServeis[(int)CampsServei.Id,i],taulaServeis[(int)CampsServei.Nom,i],fitxers.ObtainValueWithKey2(taulaServeis[(int)CampsServei.Imatge, i]),taulaServeis[(int)CampsServei.Descripcio, i],usuaris.ObtainValueWithKey2(taulaServeis[(int)CampsServei.QuiHoVaAfegirId, i]));
             return serveis;
         }
 
@@ -261,13 +267,13 @@ namespace BancDelTempsOnline
         /// <param name="serveis"></param>
         /// <param name="usuaris"></param>
         /// <returns></returns>
-        public static ServeiUsuari[] TaulaToServeisUsuaris(string[,] taulaServeisUsuaris, LlistaOrdenada<string, Servei> serveis, LlistaOrdenada<string, Usuari> usuaris)
+        public static ServeiUsuari[] TaulaToServeisUsuaris(string[,] taulaServeisUsuaris, LlistaOrdenada<string, Servei> serveis, TwoKeysList<string,string, Usuari> usuaris)
         {
             ServeiUsuari[] serveisUsuaris = new ServeiUsuari[taulaServeisUsuaris.GetLength(DimensionMatriz.Fila)];
             for(int i=0;i<serveisUsuaris.Length;i++)
             {
-                serveisUsuaris[i] = new ServeiUsuari(serveis[taulaServeisUsuaris[(int)CampsServeiUsuari.ServeiId, i]], usuaris[taulaServeisUsuaris[(int)CampsServeiUsuari.UsuariId, i]]);
-                usuaris[serveisUsuaris[i].Usuari.NIE].ServeisSenseCertificat.Añadir(serveisUsuaris[i]);
+                serveisUsuaris[i] = new ServeiUsuari(serveis[taulaServeisUsuaris[(int)CampsServeiUsuari.ServeiId, i]], usuaris.ObtainValueWithKey2(taulaServeisUsuaris[(int)CampsServeiUsuari.UsuariId, i]));
+                usuaris.ObtainValueWithKey2(serveisUsuaris[i].Usuari.NIE).ServeisSenseCertificat.Añadir(serveisUsuaris[i]);
             }
             return serveisUsuaris;
         }

@@ -50,8 +50,7 @@ namespace BancDelTempsOnline
 		ServidorHttpSeguro servidor;
 		string paginaLogin;
 		string paginaRegistre;
-		LlistaOrdenada<string,Usuari> usuaris;
-		LlistaOrdenada<string,byte[]> fitxers;
+        ControlBD controlDades;
 		static Window1()
 		{
 			GooglePlusUser.LoadJsonCredentials("client_secret_bncT.json", (int)RedirectUri.HttpLocalhost);
@@ -60,8 +59,8 @@ namespace BancDelTempsOnline
 		public Window1()
 		{
 			InitializeComponent();
-			fitxers=new LlistaOrdenada<string, byte[]>();//els tinc que obtenir de la BD y gestionarlos
-			usuaris = new LlistaOrdenada<string, Usuari>();
+            controlDades = new ControlBD(new BaseDeDadesMySQL());//per configurar mes en devant
+
 			servidor = new ServidorHttpSeguro(TEMPSPERRENOVARIP, INTENTSCLIENTPERSERPERILLOS, GooglePlusUser.RedirectUri, urlPaginaFitxers); 
 			servidor.ClienteSeguro += PeticionWeb;
 			servidor.ClienteNoSeguro += BanPerAbus;
@@ -110,7 +109,7 @@ namespace BancDelTempsOnline
 				//si el pot agafar se li dona
 				elementHaEntregar=UrlElementDemanat(cliente);
 				if(!cliente.Bloqueado)
-					cliente.Client.Response.Send(fitxers[elementHaEntregar]);
+					cliente.Client.Response.Send(controlDades.ObtéFitxerNom(elementHaEntregar).Dades);
 			}
 		}
 
@@ -121,7 +120,7 @@ namespace BancDelTempsOnline
 			GooglePlusUser gUsuari;
 			Usuari usuariRegistrat;
 			//si no pot el bloquejo,notifico i poso ban
-			if(!fitxers.Existeix(url))//posar la validació si pot o no l'usuari obtenir la url si no tingues dret a accedir llavors li cau un ban!
+			if(controlDades.ObtéFitxerNom(url)==null)//posar la validació si pot o no l'usuari obtenir la url si no tingues dret a accedir llavors li cau un ban!
 			{
 				cliente.Bloqueado=true;
 				if(cliente.Tag==null){
@@ -163,7 +162,7 @@ namespace BancDelTempsOnline
 				//mirar si un cop rebut el formulari es pot fer alguna trampa si es aixi protegirho
 				usuari = CreaUsuari(cliente.Client.Request);
 				cliente.Tag = usuari;
-				usuaris.Afegir(usuari.Email, usuari);
+                controlDades.Afegir(usuari);
 				//ja ha finalitzat el registre ara li envio la seva pagina home
 				paginaHaEntregar = PaginaHomeUsuari(usuari);
 			}
@@ -173,14 +172,16 @@ namespace BancDelTempsOnline
 		{
 			string paginaHaEntregar;
 			GooglePlusUser googleUser;
+            Usuari usuariLogin;
 			if (cliente.Client.Request.QueryString.HasKeys()) {
 				//li ha donat al botó per fer login :D
 				googleUser = GooglePlusUser.GetProfile(cliente);
-				if (usuaris.Existeix(googleUser.Email)) {
+                usuariLogin = controlDades.ObtéUsuariEmail(googleUser.Email);
+                if (usuariLogin!=null) {
 					//ha carregat un usuari existent
-					cliente.Tag = usuaris[googleUser.Email];
+					cliente.Tag = usuariLogin;
 					//pagina home usuari
-					paginaHaEntregar = PaginaHomeUsuari(usuaris[googleUser.Email]);
+					paginaHaEntregar = PaginaHomeUsuari(usuariLogin);
 				} else {
 					//pagina registre
 					paginaHaEntregar = PaginaRegistre(googleUser);

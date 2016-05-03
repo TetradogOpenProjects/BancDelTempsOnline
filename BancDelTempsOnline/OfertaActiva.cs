@@ -204,6 +204,11 @@ namespace BancDelTempsOnline
                     if (dades.Length > MAXLONGITUDIMATGEOFERTA)
                         throw new ArgumentException("S'ha superat el limit de longitud per la imatge que és " + MAXLONGITUDIMATGEOFERTA);
                 }
+                if(imatgeOferta!=null)
+                {
+                    //trec l'arxiu de la BD
+                    imatgeOferta.OnBaixa();
+                }
                 imatgeOferta = value;
                 CanviString(CampsOfertaActiva.ImatgeOferta.ToString(), dades);
                 
@@ -223,7 +228,15 @@ namespace BancDelTempsOnline
         {
             return idLocal;
         }
-
+        public override void OnBaixa()
+        {
+            base.OnBaixa();
+            // trec els arxius de la BD
+            ImatgeOferta = null;
+            for (int i = 0; i < DocumentsAdjunts.Count; i++)
+                documentsAdjunts[i].OnBaixa();
+            documentsAdjunts.Buida();
+        }
         public int CompareTo(OfertaActiva other)
         {
             int comparteTo;
@@ -264,13 +277,14 @@ namespace BancDelTempsOnline
             return sentencia;
         }
 
-        public static OfertaActiva[] TaulaToOfertesActives(string[,] taulaOfertesActives, LlistaOrdenada<string, Usuari> usuarisList,UsuariPerLaOferta[] usuarisOferts, LlistaOrdenada<string, Servei> serveis, LlistaOrdenada<string, Fitxer> fitxers)
+        public static OfertaActiva[] TaulaToOfertesActives(string[,] taulaOfertesActives, TwoKeysList<string, string, Usuari> usuaris,UsuariPerLaOferta[] usuarisOferts, LlistaOrdenada<string, Servei> serveis, TwoKeysList<string,string, Fitxer> fitxers)
         {
             OfertaActiva[] ofertesActives = new OfertaActiva[taulaOfertesActives.GetLength(DimensionMatriz.Fila)];
             for (int i = 0; i < ofertesActives.Length; i++)
             {
-                ofertesActives[i] = new OfertaActiva(taulaOfertesActives[(int)CampsOfertaActiva.Id, i], usuarisList[taulaOfertesActives[(int)CampsOfertaActiva.Demandant, i]],ObjecteSql.StringToDateTime(taulaOfertesActives[(int)CampsOfertaActiva.Inici, i]), taulaOfertesActives[(int)CampsOfertaActiva.Titol, i], serveis[taulaOfertesActives[(int)CampsOfertaActiva.ServeiSolicitat, i]], taulaOfertesActives[(int)CampsOfertaActiva.Descripcio, i], fitxers[taulaOfertesActives[(int)CampsOfertaActiva.ImatgeOferta, i]],fitxers.Filtra((fitxer)=> { return fitxer.Value.IdOnSutilitza == taulaOfertesActives[(int)CampsOfertaActiva.Id, i]; }).ValuesToArray(),usuarisList[taulaOfertesActives[(int)CampsOfertaActiva.QuiHaValidat,i]],usuarisOferts.Filtra((usuariOfert)=> { return usuariOfert.OfertaId == taulaOfertesActives[(int)CampsOfertaActiva.Id, i]; }).ToArray());
-                usuarisList[ofertesActives[i].Demandant.PrimaryKey].OfertesActives.Añadir(ofertesActives[i]);
+                ofertesActives[i] = new OfertaActiva(taulaOfertesActives[(int)CampsOfertaActiva.Id, i], usuaris.ObtainValueWithKey2(taulaOfertesActives[(int)CampsOfertaActiva.Demandant, i]),ObjecteSql.StringToDateTime(taulaOfertesActives[(int)CampsOfertaActiva.Inici, i]), taulaOfertesActives[(int)CampsOfertaActiva.Titol, i], serveis[taulaOfertesActives[(int)CampsOfertaActiva.ServeiSolicitat, i]], taulaOfertesActives[(int)CampsOfertaActiva.Descripcio, i], fitxers.ObtainValueWithKey2(taulaOfertesActives[(int)CampsOfertaActiva.ImatgeOferta, i]),fitxers.Filtra((fitxer)=> { return fitxer.Value.IdOnSutilitza == taulaOfertesActives[(int)CampsOfertaActiva.Id, i]; }).ValuesToArray(),usuaris.ObtainValueWithKey2(taulaOfertesActives[(int)CampsOfertaActiva.QuiHaValidat,i]),usuarisOferts.Filtra((usuariOfert)=> { return usuariOfert.OfertaId == taulaOfertesActives[(int)CampsOfertaActiva.Id, i]; }).ToArray());
+                usuaris.ObtainValueWithKey2(ofertesActives[i].Demandant.PrimaryKey).OfertesActives.Añadir(ofertesActives[i]);
+
             }
             return ofertesActives;
         }
@@ -389,12 +403,12 @@ namespace BancDelTempsOnline
             sentencia += CampsUsuariPerLaOferta.Data.ToString() + " date not null);";
             return sentencia;
         }
-        public static UsuariPerLaOferta[] TaulaToUsuarisPerLaOfertes(string[,] taulaUsuarisPerLaOfera,LlistaOrdenada<string,Usuari> usuarisList)
+        public static UsuariPerLaOferta[] TaulaToUsuarisPerLaOfertes(string[,] taulaUsuarisPerLaOfera,TwoKeysList<string, string, Usuari> usuarisList)
         {
             UsuariPerLaOferta[] usuarisPerLesOfertes = new UsuariPerLaOferta[taulaUsuarisPerLaOfera.GetLength(DimensionMatriz.Fila)];
             for(int i=0;i<usuarisPerLesOfertes.Length;i++)
             {
-                usuarisPerLesOfertes[i] = new UsuariPerLaOferta(taulaUsuarisPerLaOfera[(int)CampsUsuariPerLaOferta.Id, i], null, usuarisList[taulaUsuarisPerLaOfera[(int)CampsUsuariPerLaOferta.UsuariId, i]], (ComEsVaAfegir)Enum.Parse(typeof(ComEsVaAfegir), taulaUsuarisPerLaOfera[(int)CampsUsuariPerLaOferta.ComVanAfegirse, i]), ObjecteSql.StringToDateTime(taulaUsuarisPerLaOfera[(int)CampsUsuariPerLaOferta.Data, i])) { OfertaId = taulaUsuarisPerLaOfera[(int)CampsUsuariPerLaOferta.OfertaId, i] };
+                usuarisPerLesOfertes[i] = new UsuariPerLaOferta(taulaUsuarisPerLaOfera[(int)CampsUsuariPerLaOferta.Id, i], null, usuarisList.ObtainValueWithKey2(taulaUsuarisPerLaOfera[(int)CampsUsuariPerLaOferta.UsuariId, i]), (ComEsVaAfegir)Enum.Parse(typeof(ComEsVaAfegir), taulaUsuarisPerLaOfera[(int)CampsUsuariPerLaOferta.ComVanAfegirse, i]), ObjecteSql.StringToDateTime(taulaUsuarisPerLaOfera[(int)CampsUsuariPerLaOferta.Data, i])) { OfertaId = taulaUsuarisPerLaOfera[(int)CampsUsuariPerLaOferta.OfertaId, i] };
             }
             return usuarisPerLesOfertes;
         }

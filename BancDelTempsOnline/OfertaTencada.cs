@@ -251,11 +251,11 @@ namespace BancDelTempsOnline
             return sentencia;
         }
 
-        public static OfertaTencada[] TaulaToOfertesTencades(string[,] taulaOfertesTencades, LlistaOrdenada<string, Usuari> usuarisList)
+        public static OfertaTencada[] TaulaToOfertesTencades(string[,] taulaOfertesTencades, TwoKeysList<string, string, Usuari> usuaris)
         {
             OfertaTencada[] ofertesTencades = new OfertaTencada[taulaOfertesTencades.GetLength(DimensionMatriz.Fila)];
             for (int i = 0; i < ofertesTencades.Length; i++)
-                ofertesTencades[i] = new OfertaTencada(taulaOfertesTencades[(int)CampsOfertaTencada.Id, i], usuarisList[taulaOfertesTencades[(int)CampsOfertaTencada.Demandant, i]], usuarisList[taulaOfertesTencades[(int)CampsOfertaTencada.Ofert, i]], taulaOfertesTencades[(int)CampsOfertaTencada.DadesPerTrobarAQuiOferta, i], taulaOfertesTencades[(int)CampsOfertaTencada.Titol, i], taulaOfertesTencades[(int)CampsOfertaTencada.Descripcio, i], Convert.ToInt32(taulaOfertesTencades[(int)CampsOfertaTencada.Temps, i]), ObjecteSql.StringToDateTime(taulaOfertesTencades[(int)CampsOfertaTencada.Inici, i]), ObjecteSql.StringToDateTime(taulaOfertesTencades[(int)CampsOfertaTencada.Fi, i]), usuarisList[taulaOfertesTencades[(int)CampsOfertaTencada.QuiValidaLaOferta, i]]);
+                ofertesTencades[i] = new OfertaTencada(taulaOfertesTencades[(int)CampsOfertaTencada.Id, i], usuaris.ObtainValueWithKey2(taulaOfertesTencades[(int)CampsOfertaTencada.Demandant, i]), usuaris.ObtainValueWithKey2(taulaOfertesTencades[(int)CampsOfertaTencada.Ofert, i]), taulaOfertesTencades[(int)CampsOfertaTencada.DadesPerTrobarAQuiOferta, i], taulaOfertesTencades[(int)CampsOfertaTencada.Titol, i], taulaOfertesTencades[(int)CampsOfertaTencada.Descripcio, i], Convert.ToInt32(taulaOfertesTencades[(int)CampsOfertaTencada.Temps, i]), ObjecteSql.StringToDateTime(taulaOfertesTencades[(int)CampsOfertaTencada.Inici, i]), ObjecteSql.StringToDateTime(taulaOfertesTencades[(int)CampsOfertaTencada.Fi, i]), usuaris.ObtainValueWithKey2(taulaOfertesTencades[(int)CampsOfertaTencada.QuiValidaLaOferta, i]));
             return ofertesTencades;
         }
     }

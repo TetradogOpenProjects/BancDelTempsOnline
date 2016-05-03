@@ -110,6 +110,8 @@ namespace BancDelTempsOnline
             {
                 if (value != null && value.Dades.Length > LONGITUDMAXIMADJUNT)
                     throw new ArgumentException("S'ha superat el maxim");
+                if (adjunt != null)
+                    adjunt.OnBaixa();
                 adjunt = value;
             }
         }
@@ -118,7 +120,11 @@ namespace BancDelTempsOnline
         {
             return idUnic;
         }
-
+        public override void OnBaixa()
+        {
+            base.OnBaixa();
+            Adjunt = null;//el trec de la BD
+        }
         public override string StringInsertSql(TipusBaseDeDades tipusBD)
         {
             string sentencia = "insert into " + TAULA + "("+ CampsMissatge.Emisor.ToString()+"," + CampsMissatge.Receptor.ToString() + "," + CampsMissatge.Missatge.ToString() + "," + CampsMissatge.Data.ToString()  + ") values(";
@@ -141,12 +147,12 @@ namespace BancDelTempsOnline
             return sentencia;
         }
 
-        public static Missatge[] TaulaToMissatges(string[,] taulaMissatges, LlistaOrdenada<string, Usuari> usuarisList,LlistaOrdenada<string,Fitxer> fitxers)
+        public static Missatge[] TaulaToMissatges(string[,] taulaMissatges, TwoKeysList<string, string, Usuari> usuaris, TwoKeysList<string, string, Fitxer> fitxers)
         {
             Missatge[] missatges = new Missatge[taulaMissatges.GetLength(DimensionMatriz.Fila)];
             for(int i=0;i<missatges.Length;i++)
             {
-                missatges[i] = new Missatge(taulaMissatges[(int)CampsMissatge.Id, i], usuarisList[taulaMissatges[(int)CampsMissatge.Emisor, i]], usuarisList[taulaMissatges[(int)CampsMissatge.Receptor, i]], taulaMissatges[(int)CampsMissatge.Missatge, i],fitxers[taulaMissatges[(int)CampsMissatge.Adjunt, i]], ObjecteSql.StringToDateTime(taulaMissatges[(int)CampsMissatge.Data, i]));
+                missatges[i] = new Missatge(taulaMissatges[(int)CampsMissatge.Id, i], usuaris.ObtainValueWithKey2(taulaMissatges[(int)CampsMissatge.Emisor, i]), usuaris.ObtainValueWithKey2(taulaMissatges[(int)CampsMissatge.Receptor, i]), taulaMissatges[(int)CampsMissatge.Missatge, i],fitxers.ObtainValueWithKey2(taulaMissatges[(int)CampsMissatge.Adjunt, i]), ObjecteSql.StringToDateTime(taulaMissatges[(int)CampsMissatge.Data, i]));
             }
             return missatges;
         }

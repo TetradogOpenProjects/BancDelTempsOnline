@@ -35,9 +35,10 @@ namespace BancDelTempsOnline
         //per poder tenir tots els objectes rapidament els posem en llistes :)
         LlistaOrdenada<string, Certificat> certificatsList;
         LlistaOrdenada<string, Servei> serveisList;
-        LlistaOrdenada<string, Usuari> usuarisList;
+        TwoKeysList<string,string, Usuari> usuarisList;//idLocalUnic,NIE,Usuari
+        TwoKeysList<string, string, Usuari> usuarisList2;//Email,NIE,usuari
         LlistaOrdenada<string, Missatge> missatgesList;
-        LlistaOrdenada<string, Fitxer> fitxersList;
+        TwoKeysList<string,string, Fitxer> fitxersList;
         LlistaOrdenada<string, OfertaActiva> ofertesActivesList;
         static ControlBD()
         {
@@ -77,6 +78,7 @@ namespace BancDelTempsOnline
             OfertaTencada ofertaTencada;
             OfertaActiva ofertaActiva;
             Fitxer fitxer;
+            Usuari usuari;
             UsuariPerLaOferta usuariPerLaOferta;
             if (obj is Certificat)
             {
@@ -90,8 +92,21 @@ namespace BancDelTempsOnline
             }
             else if (obj is Usuari)
             {
-                if (!usuarisList.Existeix(obj.PrimaryKey))
-                    usuarisList.Afegir(obj.PrimaryKey, obj as Usuari);
+                usuari = (Usuari)obj;
+                if (!usuarisList.ContainsKey2(usuari.PrimaryKey))
+                {
+                    usuarisList.Add(usuari.IdLocalUnic, usuari.PrimaryKey, usuari);
+                    usuarisList2.Add(usuari.Email, usuari.PrimaryKey, usuari);
+                    usuari.Actualitzat += (objActualitzat)=>{
+                        Usuari usuariActualitzat = (Usuari)objActualitzat;
+                        //si ha canviat d'email l'haig de renovar
+                        if (!usuarisList2.ContainsKey1(usuariActualitzat.Email))
+                        {
+                            usuarisList2.Remove2(usuariActualitzat.PrimaryKey);
+                            usuarisList2.Add(usuariActualitzat.Email, usuariActualitzat.PrimaryKey, usuariActualitzat);
+                        }
+                    };
+                }
             }
             else if (obj is Missatge)
             {
@@ -99,20 +114,20 @@ namespace BancDelTempsOnline
                 if (!missatgesList.Existeix(missatge.PrimaryKey))
                 {
                     missatgesList.Afegir(missatge.PrimaryKey, missatge);
-                    usuarisList[missatge.UsuariEmisor.PrimaryKey].AfegirMissatge(missatge);
-                    usuarisList[missatge.UsuariReceptor.PrimaryKey].AfegirMissatge(missatge);
+                    usuarisList.ObtainValueWithKey2(missatge.UsuariEmisor.PrimaryKey).AfegirMissatge(missatge);
+                    usuarisList.ObtainValueWithKey2(missatge.UsuariReceptor.PrimaryKey).AfegirMissatge(missatge);
                 }
             }
             else if (obj is MunicipiQueVolAnar)
             {
                 municipi = (MunicipiQueVolAnar)obj;
-                usuarisList[municipi.Usuari.PrimaryKey].AfegirMunicipiQueVolAnar(municipi);
+                usuarisList.ObtainValueWithKey2(municipi.Usuari.PrimaryKey).AfegirMunicipiQueVolAnar(municipi);
             }
             else if (obj is CertificatUsuari)
             {
                 certificatUsuari = (CertificatUsuari)obj;
-                if (!usuarisList[certificatUsuari.Usuari.PrimaryKey].Certificats.ExisteObjeto(certificatUsuari))
-                    usuarisList[certificatUsuari.Usuari.PrimaryKey].Certificats.Añadir(certificatUsuari);
+                if (!usuarisList.ObtainValueWithKey2(certificatUsuari.Usuari.PrimaryKey).Certificats.ExisteObjeto(certificatUsuari))
+                    usuarisList.ObtainValueWithKey2(certificatUsuari.Usuari.PrimaryKey).Certificats.Añadir(certificatUsuari);
             }
             else if (obj is ServeiCertificat)
             {
@@ -123,25 +138,25 @@ namespace BancDelTempsOnline
             else if (obj is ServeiUsuari)
             {
                 serveiUsuari = (ServeiUsuari)obj;
-                if (!usuarisList[serveiUsuari.Usuari.PrimaryKey].ServeisSenseCertificat.ExisteObjeto(serveiUsuari))
-                    usuarisList[serveiUsuari.Usuari.PrimaryKey].ServeisSenseCertificat.Añadir(serveiUsuari);
+                if (!usuarisList.ObtainValueWithKey2(serveiUsuari.Usuari.PrimaryKey).ServeisSenseCertificat.ExisteObjeto(serveiUsuari))
+                    usuarisList.ObtainValueWithKey2(serveiUsuari.Usuari.PrimaryKey).ServeisSenseCertificat.Añadir(serveiUsuari);
             }else if(obj is OfertaTencada)
             {
                 ofertaTencada = (OfertaTencada)obj;
-                if (!usuarisList[ofertaTencada.Demandant.PrimaryKey].OfertesTencades.ExisteObjeto(ofertaTencada))
-                    usuarisList[ofertaTencada.Demandant.PrimaryKey].OfertesTencades.Añadir(ofertaTencada);
-                if (!usuarisList[ofertaTencada.Ofert.PrimaryKey].OfertesTencades.ExisteObjeto(ofertaTencada))
-                    usuarisList[ofertaTencada.Ofert.PrimaryKey].OfertesTencades.Añadir(ofertaTencada);
+                if (!usuarisList.ObtainValueWithKey2(ofertaTencada.Demandant.PrimaryKey).OfertesTencades.ExisteObjeto(ofertaTencada))
+                    usuarisList.ObtainValueWithKey2(ofertaTencada.Demandant.PrimaryKey).OfertesTencades.Añadir(ofertaTencada);
+                if (!usuarisList.ObtainValueWithKey2(ofertaTencada.Ofert.PrimaryKey).OfertesTencades.ExisteObjeto(ofertaTencada))
+                    usuarisList.ObtainValueWithKey2(ofertaTencada.Ofert.PrimaryKey).OfertesTencades.Añadir(ofertaTencada);
             }else if(obj is Fitxer)
             {
                 fitxer = (Fitxer)obj;
-                if (!fitxersList.Existeix(fitxer.PrimaryKey))
-                    fitxersList.Afegir(fitxer.PrimaryKey, fitxer);
+                if (!fitxersList.ContainsKey2(fitxer.PrimaryKey))
+                    fitxersList.Add(fitxer.NomAmbFormat,fitxer.PrimaryKey, fitxer);
             }else if(obj is OfertaActiva)
             {
                 ofertaActiva = (OfertaActiva)obj;
-                if(!usuarisList[ofertaActiva.Demandant.PrimaryKey].OfertesActives.ExisteObjeto(ofertaActiva))
-                  usuarisList[ofertaActiva.Demandant.PrimaryKey].OfertesActives.Añadir(ofertaActiva);
+                if(!usuarisList.ObtainValueWithKey2(ofertaActiva.Demandant.PrimaryKey).OfertesActives.ExisteObjeto(ofertaActiva))
+                  usuarisList.ObtainValueWithKey2(ofertaActiva.Demandant.PrimaryKey).OfertesActives.Añadir(ofertaActiva);
             }else if(obj is UsuariPerLaOferta)
             {
                 usuariPerLaOferta = (UsuariPerLaOferta)obj;
@@ -150,6 +165,8 @@ namespace BancDelTempsOnline
 
             obj.Baixa += TreuObjecte;
         }
+
+
 
         private void TreuObjecte(ObjecteSql obj)
         {
@@ -173,8 +190,11 @@ namespace BancDelTempsOnline
             }
             else if (obj is Usuari)
             {
-                if (usuarisList.Existeix(obj.PrimaryKey))
-                    usuarisList.Elimina(obj.PrimaryKey);
+                if (usuarisList.ContainsKey2(obj.PrimaryKey))
+                {
+                    usuarisList.Remove2(obj.PrimaryKey);
+                    usuarisList2.Remove2(obj.PrimaryKey);
+                }
             }
             else if (obj is Missatge)
             {
@@ -184,13 +204,13 @@ namespace BancDelTempsOnline
             else if (obj is MunicipiQueVolAnar)
             {
                 municipi = (MunicipiQueVolAnar)obj;
-                usuarisList[municipi.Usuari.PrimaryKey].TreuMunicipiQuePotAnar(municipi.Municipi);
+                usuarisList.ObtainValueWithKey2(municipi.Usuari.PrimaryKey).TreuMunicipiQuePotAnar(municipi.Municipi);
             }
             else if (obj is CertificatUsuari)
             {
                 certificatUsuari = (CertificatUsuari)obj;
-                if (usuarisList[certificatUsuari.Usuari.PrimaryKey].Certificats.ExisteObjeto(certificatUsuari))
-                    usuarisList[certificatUsuari.Usuari.PrimaryKey].Certificats.Elimina(obj.PrimaryKey);
+                if (usuarisList.ObtainValueWithKey2(certificatUsuari.Usuari.PrimaryKey).Certificats.ExisteObjeto(certificatUsuari))
+                    usuarisList.ObtainValueWithKey2(certificatUsuari.Usuari.PrimaryKey).Certificats.Elimina(obj.PrimaryKey);
             }
             else if (obj is ServeiCertificat)
             {
@@ -201,16 +221,16 @@ namespace BancDelTempsOnline
             else if (obj is ServeiUsuari)
             {
                 serveiUsuari = (ServeiUsuari)obj;
-                if (usuarisList[serveiUsuari.Usuari.PrimaryKey].ServeisSenseCertificat.ExisteObjeto(serveiUsuari))
-                    usuarisList[serveiUsuari.Usuari.PrimaryKey].ServeisSenseCertificat.Elimina(obj.PrimaryKey);
+                if (usuarisList.ObtainValueWithKey2(serveiUsuari.Usuari.PrimaryKey).ServeisSenseCertificat.ExisteObjeto(serveiUsuari))
+                    usuarisList.ObtainValueWithKey2(serveiUsuari.Usuari.PrimaryKey).ServeisSenseCertificat.Elimina(obj.PrimaryKey);
             }
             else if (obj is OfertaTencada)
             {
                 ofertaTencada = (OfertaTencada)obj;
-                if (usuarisList[ofertaTencada.Demandant.PrimaryKey].OfertesTencades.ExisteObjeto(ofertaTencada))
-                    usuarisList[ofertaTencada.Demandant.PrimaryKey].OfertesTencades.Elimina(ofertaTencada);
-                if (usuarisList[ofertaTencada.Ofert.PrimaryKey].OfertesTencades.ExisteObjeto(ofertaTencada))
-                    usuarisList[ofertaTencada.Ofert.PrimaryKey].OfertesTencades.Elimina(ofertaTencada);
+                if (usuarisList.ObtainValueWithKey2(ofertaTencada.Demandant.PrimaryKey).OfertesTencades.ExisteObjeto(ofertaTencada))
+                    usuarisList.ObtainValueWithKey2(ofertaTencada.Demandant.PrimaryKey).OfertesTencades.Elimina(ofertaTencada);
+                if (usuarisList.ObtainValueWithKey2(ofertaTencada.Ofert.PrimaryKey).OfertesTencades.ExisteObjeto(ofertaTencada))
+                    usuarisList.ObtainValueWithKey2(ofertaTencada.Ofert.PrimaryKey).OfertesTencades.Elimina(ofertaTencada);
             }
             else if(obj is UsuariPerLaOferta)
             {
@@ -225,9 +245,17 @@ namespace BancDelTempsOnline
         {
             return certificatsList[primaryKey];
         }
-        public Usuari ObtéUsuari(string primaryKey)
+        public Usuari ObtéUsuariNIE(string primaryKey)
         {
-            return usuarisList[primaryKey];
+            return usuarisList.ObtainValueWithKey2(primaryKey);
+        }
+        public Usuari ObtéUsuariEmail(string emailUser)
+        {
+            return usuarisList2.ObtainValueWithKey1(emailUser);
+        }
+        public Usuari ObtéUsuariId(string idUnicLocal)
+        {
+            return usuarisList.ObtainValueWithKey1(idUnicLocal);
         }
         public Servei ObtéServei(string primaryKey)
         {
@@ -240,6 +268,14 @@ namespace BancDelTempsOnline
         public OfertaActiva ObtéOfertaActiva(string primaryKey)
         {
             return ofertesActivesList[primaryKey];
+        }
+        public Fitxer ObtéFitxerId(string idFitxer)
+        {
+            return fitxersList.ObtainValueWithKey2(idFitxer);
+        }
+        public Fitxer ObtéFitxerNom(string nomFitxer)
+        {
+            return fitxersList.ObtainValueWithKey1(nomFitxer);
         }
         #region implemented abstract members of ControlObjectesSql
 
@@ -261,15 +297,19 @@ namespace BancDelTempsOnline
 
             certificatsList = new LlistaOrdenada<string, Certificat>();
             serveisList = new LlistaOrdenada<string, Servei>();
-            usuarisList = new LlistaOrdenada<string, Usuari>();
+            usuarisList = new TwoKeysList<string, string, Usuari>();
             missatgesList = new LlistaOrdenada<string, Missatge>();
-            fitxersList = new LlistaOrdenada<string, Fitxer>();
+            fitxersList = new TwoKeysList<string, string, Fitxer>();
             ofertesActivesList = new LlistaOrdenada<string, OfertaActiva>();
+            usuarisList2 = new TwoKeysList<string, string, Usuari>();
             for (int i = 0; i < fitxers.Length; i++)
-                this.fitxersList.Afegir(fitxers[i].PrimaryKey, fitxers[i]);
+                this.fitxersList.Add(fitxers[i].NomAmbFormat,fitxers[i].PrimaryKey, fitxers[i]);
             usuaris = Usuari.TaulaToUsuaris(BaseDeDades.ConsultaTableDirect(Usuari.TAULA),this.fitxersList);
             for (int i = 0; i < usuaris.Length; i++)
-                usuarisList.Afegir(usuaris[i].NIE, usuaris[i]);
+            {
+                usuarisList.Add(usuaris[i].IdLocalUnic, usuaris[i].NIE, usuaris[i]);
+                usuarisList2.Add(usuaris[i].Email, usuaris[i].NIE, usuaris[i]);
+            }
 
             certificats = Certificat.TaulaToCertificats(BaseDeDades.ConsultaTableDirect(Certificat.TAULA), usuarisList);
             serveis = Servei.TaulaToServeis(BaseDeDades.ConsultaTableDirect(Servei.TAULA), usuarisList,this.fitxersList);

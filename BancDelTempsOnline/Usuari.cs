@@ -50,6 +50,9 @@ namespace BancDelTempsOnline
         ListaUnica<OfertaTencada> ofertesTencades;
         ListaUnica<OfertaActiva> ofertesActives;
         Usuari quiHoVaFormalitzar;
+        //per trobar l'usuari de forma interna i per no donar el DNI a fora posare un idUnic per a cada usuari que es genera cada vegada que carrega la BD
+        string idLocal;
+
 		//usuari donat d'alta
         /// <summary>
         /// 
@@ -98,6 +101,7 @@ namespace BancDelTempsOnline
             missatgesRebuts = new LlistaOrdenada<Usuari, ListaUnica<Missatge>>();
             ofertesTencades = new ListaUnica<OfertaTencada>();
             ofertesActives = new ListaUnica<OfertaActiva>();
+            idLocal = MiRandom.Next() + "" + DateTime.Now.Ticks;
 		}
 		//usuari registrat sense donar d'alta: per tant no esta activat ni te una data d'inscripcio formal!
 		public Usuari(string nom,Fitxer imatgePerfil,string municipi,string nie,string telefon,string email,DateTime dataRegistre)
@@ -106,6 +110,8 @@ namespace BancDelTempsOnline
 				public Usuari(string nom,Fitxer imatgePerfil,string municipi,string nie,string telefon,string email)
 					:this(SOCIPENDENT,nom,imatgePerfil,municipi,nie,telefon,email,false,default(DateTime),DateTime.Now,null){}
 		#region Propietats
+        public string IdLocalUnic
+        { get { return idLocal; } }
         public ListaUnica<OfertaTencada> OfertesTencades
         { get { return ofertesTencades; } }
         public ListaUnica<OfertaActiva> OfertesActives
@@ -141,6 +147,8 @@ namespace BancDelTempsOnline
 			set{
                 if (value!=null&&value.Dades.Length > TAMANYIMATGEPERFIL)
                     throw new ArgumentException("S'ha superat el maxim de longitud");
+                if (imatgePerfil != null)
+                    imatgePerfil.OnBaixa();
                 imatgePerfil = value;
                 if(imatgePerfil!=null)
 				    CanviString(CampsUsuari.ImatgePerfil.ToString(), ImatgePerfil.PrimaryKey);
@@ -394,13 +402,13 @@ namespace BancDelTempsOnline
             sentencia += CampsUsuari.QuiHoVaFormalitzar.ToString() + " varchar(10) "+Usuari.TAULA+"("+Usuari.CAMPPRIMARYKEY+")"+");";
             return sentencia;
         }
-        public static Usuari[] TaulaToUsuaris(string[,] taulaUsuaris,LlistaOrdenada<string,Fitxer> fitxers)
+        public static Usuari[] TaulaToUsuaris(string[,] taulaUsuaris, TwoKeysList<string, string, Fitxer> fitxers)
         {
             Usuari[] usuaris = new Usuari[taulaUsuaris.GetLength(DimensionMatriz.Fila)];
             SortedList<string, Usuari> usuarisList = new SortedList<string, Usuari>();
             for (int i = 0; i < usuaris.Length; i++)
             {
-                usuaris[i] = new Usuari(Convert.ToInt32(taulaUsuaris[(int)CampsUsuari.NumSoci, i]), taulaUsuaris[(int)CampsUsuari.Nom, i],fitxers[taulaUsuaris[(int)CampsUsuari.ImatgePerfil, i]], taulaUsuaris[(int)CampsUsuari.Municipi, i], taulaUsuaris[(int)CampsUsuari.NIE, i], taulaUsuaris[(int)CampsUsuari.Telefon, i], taulaUsuaris[(int)CampsUsuari.Email, i], Convert.ToBoolean(taulaUsuaris[(int)CampsUsuari.Actiu, i]), ObjecteSql.StringToDateTime(taulaUsuaris[(int)CampsUsuari.DataRegistre, i]), ObjecteSql.StringToDateTime(taulaUsuaris[(int)CampsUsuari.DataInscripcioFormal, i]),null);
+                usuaris[i] = new Usuari(Convert.ToInt32(taulaUsuaris[(int)CampsUsuari.NumSoci, i]), taulaUsuaris[(int)CampsUsuari.Nom, i],fitxers.ObtainValueWithKey2(taulaUsuaris[(int)CampsUsuari.ImatgePerfil, i]), taulaUsuaris[(int)CampsUsuari.Municipi, i], taulaUsuaris[(int)CampsUsuari.NIE, i], taulaUsuaris[(int)CampsUsuari.Telefon, i], taulaUsuaris[(int)CampsUsuari.Email, i], Convert.ToBoolean(taulaUsuaris[(int)CampsUsuari.Actiu, i]), ObjecteSql.StringToDateTime(taulaUsuaris[(int)CampsUsuari.DataRegistre, i]), ObjecteSql.StringToDateTime(taulaUsuaris[(int)CampsUsuari.DataInscripcioFormal, i]),null);
                 usuarisList.Add(usuaris[i].PrimaryKey, usuaris[i]);
             }
             //poso qui ho va formalitzar
@@ -531,12 +539,12 @@ namespace BancDelTempsOnline
         /// <param name="taulaMunicipisQueVolAnar"></param>
         /// <param name="usuarisList"></param>
         /// <returns></returns>
-        public static MunicipiQueVolAnar[] TaulaToMunicipisQueVolAnar(string[,] taulaMunicipisQueVolAnar, LlistaOrdenada<string, Usuari> usuarisList)
+        public static MunicipiQueVolAnar[] TaulaToMunicipisQueVolAnar(string[,] taulaMunicipisQueVolAnar, TwoKeysList<string, string, Usuari> usuaris)
         {
             MunicipiQueVolAnar[] municipisQueVolenAnar = new MunicipiQueVolAnar[taulaMunicipisQueVolAnar.GetLength(DimensionMatriz.Fila)];
            for(int i=0;i<municipisQueVolenAnar.Length;i++)
             {
-                municipisQueVolenAnar[i] = new MunicipiQueVolAnar(taulaMunicipisQueVolAnar[(int)CampsMunicipiQueVolAnar.Id, i], taulaMunicipisQueVolAnar[(int)CampsMunicipiQueVolAnar.MunicipiId, i], usuarisList[taulaMunicipisQueVolAnar[(int)CampsMunicipiQueVolAnar.UsuariId, i]]) { PrimaryKey = taulaMunicipisQueVolAnar[(int)CampsMunicipiQueVolAnar.Id, i] };
+                municipisQueVolenAnar[i] = new MunicipiQueVolAnar(taulaMunicipisQueVolAnar[(int)CampsMunicipiQueVolAnar.Id, i], taulaMunicipisQueVolAnar[(int)CampsMunicipiQueVolAnar.MunicipiId, i], usuaris.ObtainValueWithKey2(taulaMunicipisQueVolAnar[(int)CampsMunicipiQueVolAnar.UsuariId, i])) { PrimaryKey = taulaMunicipisQueVolAnar[(int)CampsMunicipiQueVolAnar.Id, i] };
                 municipisQueVolenAnar[i].Usuari.AfegirMunicipiQueVolAnar(municipisQueVolenAnar[i]);
             }
             return municipisQueVolenAnar;
