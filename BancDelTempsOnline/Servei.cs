@@ -273,7 +273,7 @@ namespace BancDelTempsOnline
             for(int i=0;i<serveisUsuaris.Length;i++)
             {
                 serveisUsuaris[i] = new ServeiUsuari(serveis[taulaServeisUsuaris[(int)CampsServeiUsuari.ServeiId, i]], usuaris.ObtainValueWithKey2(taulaServeisUsuaris[(int)CampsServeiUsuari.UsuariId, i]));
-                usuaris.ObtainValueWithKey2(serveisUsuaris[i].Usuari.NIE).ServeisSenseCertificat.Añadir(serveisUsuaris[i]);
+                usuaris.ObtainValueWithKey2(serveisUsuaris[i].Usuari.PrimaryKey).ServeisSenseCertificat.Añadir(serveisUsuaris[i]);
             }
             return serveisUsuaris;
         }
