@@ -11,7 +11,7 @@ namespace BancDelTempsOnline
     /// <summary>
     /// Son les dades que quedaran de la oferta un cop finalitzada i comprobada
     /// </summary>
-    public class OfertaTencada : ObjecteSqlIdAuto,IClauUnicaPerObjecte
+    public class OfertaTencada : ObjecteSqlIdAuto,IClauUnicaPerObjecte,IComparable
     {
         public enum Realitzament
         {
@@ -231,9 +231,11 @@ namespace BancDelTempsOnline
             sentencia += ");";
             return sentencia;
         }
-        public IComparable Clau()
+        public IComparable Clau
         {
+        	get{
             return idUnicLocal;
+        	}
         }
         public static string StringCreateTable()
         {

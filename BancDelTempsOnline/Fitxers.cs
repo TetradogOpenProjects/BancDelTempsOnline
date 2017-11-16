@@ -20,7 +20,7 @@ namespace BancDelTempsOnline
         public const int MAXLONGITUDIDONSUTILITZARA = 15;
 
         string idLocal;
-        ArchuiBD archiu;
+        FitxerBD archiu;
         string idOnSutilitza;
         
 
@@ -63,7 +63,7 @@ namespace BancDelTempsOnline
             }
         }
 
-        public ArchuiBD Archiu
+        public FitxerBD Archiu
         {
             get
             {

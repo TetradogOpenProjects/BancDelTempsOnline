@@ -24,7 +24,7 @@ namespace BancDelTempsOnline
         string localIdUnic;
 		string nom;
         Usuari quiHoVaAfegir;
-        ListaUnica<ServeiCertificat> serveis;
+        LlistaOrdenada<ServeiCertificat> serveis;
         private const int MAXLONGITUDNOM=200;
 
         public Certificat(string nom,Usuari quiHoVaAfegir)
@@ -51,7 +51,7 @@ namespace BancDelTempsOnline
                 this.PrimaryKey = value;
 			}
 		}
-        public ListaUnica<ServeiCertificat> Serveis
+        public LlistaOrdenada<ServeiCertificat> Serveis
         {
             get { return serveis; }
         }
@@ -72,10 +72,14 @@ namespace BancDelTempsOnline
             }
         }
 
-        public IComparable Clau()
-        {
-            return localIdUnic;
-        }
+		#region IClauUnicaPerObjecte implementation
+		public IComparable Clau {
+			get {
+				return localIdUnic;
+			}
+		}
+		#endregion
+
 		#region implemented abstract members of ObjecteSql
 
 

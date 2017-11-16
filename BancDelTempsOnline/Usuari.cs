@@ -40,15 +40,15 @@ namespace BancDelTempsOnline
 		//si té el valor per defecte es que s'ha de validar encara
 		DateTime dataInscripcioFormal;
 		DateTime dataRegistre;
-        ListaUnica<CertificatUsuari> certificats = new ListaUnica<CertificatUsuari>();
-        ListaUnica<MunicipiQueVolAnar> municipisQueVolAnar;//es una llista de municipis on l'usuari pot anar
-        ListaUnica<ServeiUsuari> serveisSenseCertificat;
+        LlistaOrdenada<CertificatUsuari> certificats = new LlistaOrdenada<CertificatUsuari>();
+        LlistaOrdenada<MunicipiQueVolAnar> municipisQueVolAnar;//es una llista de municipis on l'usuari pot anar
+        LlistaOrdenada<ServeiUsuari> serveisSenseCertificat;
 
         //per trobarlos mes facilment
-        LlistaOrdenada<Usuari, ListaUnica<Missatge>> missatgesEnviats;
-        LlistaOrdenada<Usuari, ListaUnica<Missatge>> missatgesRebuts;
-        ListaUnica<OfertaTencada> ofertesTencades;
-        ListaUnica<OfertaActiva> ofertesActives;
+        LlistaOrdenada<Usuari, LlistaOrdenada<Missatge>> missatgesEnviats;
+        LlistaOrdenada<Usuari, LlistaOrdenada<Missatge>> missatgesRebuts;
+        LlistaOrdenada<OfertaTencada> ofertesTencades;
+        LlistaOrdenada<OfertaActiva> ofertesActives;
         Usuari quiHoVaFormalitzar;
         //per trobar l'usuari de forma interna i per no donar el DNI a fora posare un idUnic per a cada usuari que es genera cada vegada que carrega la BD
         string idLocal;
@@ -94,13 +94,13 @@ namespace BancDelTempsOnline
 			this.actiu=actiu;
 			this.dataInscripcioFormal=dataInscripcioFormal;
 			this.dataRegistre=dataRegistre;
-            municipisQueVolAnar = new ListaUnica<MunicipiQueVolAnar>();
-            certificats = new ListaUnica<CertificatUsuari>();
-            serveisSenseCertificat = new ListaUnica<ServeiUsuari>();
-            missatgesEnviats = new LlistaOrdenada<Usuari, ListaUnica<Missatge>>();
-            missatgesRebuts = new LlistaOrdenada<Usuari, ListaUnica<Missatge>>();
-            ofertesTencades = new ListaUnica<OfertaTencada>();
-            ofertesActives = new ListaUnica<OfertaActiva>();
+            municipisQueVolAnar = new LlistaOrdenada<MunicipiQueVolAnar>();
+            certificats = new LlistaOrdenada<CertificatUsuari>();
+            serveisSenseCertificat = new LlistaOrdenada<ServeiUsuari>();
+            missatgesEnviats = new LlistaOrdenada<Usuari, LlistaOrdenada<Missatge>>();
+            missatgesRebuts = new LlistaOrdenada<Usuari, LlistaOrdenada<Missatge>>();
+            ofertesTencades = new LlistaOrdenada<OfertaTencada>();
+            ofertesActives = new LlistaOrdenada<OfertaActiva>();
             idLocal = MiRandom.Next() + "" + DateTime.Now.Ticks;
 		}
 		//usuari registrat sense donar d'alta: per tant no esta activat ni te una data d'inscripcio formal!
@@ -112,15 +112,15 @@ namespace BancDelTempsOnline
 		#region Propietats
         public string IdLocalUnic
         { get { return idLocal; } }
-        public ListaUnica<OfertaTencada> OfertesTencades
+        public LlistaOrdenada<OfertaTencada> OfertesTencades
         { get { return ofertesTencades; } }
-        public ListaUnica<OfertaActiva> OfertesActives
+        public LlistaOrdenada<OfertaActiva> OfertesActives
         { get { return ofertesActives; } }
-        public ListaUnica<CertificatUsuari> Certificats
+        public LlistaOrdenada<CertificatUsuari> Certificats
         {
             get { return certificats; }
         }
-        public ListaUnica<ServeiUsuari> ServeisSenseCertificat
+        public LlistaOrdenada<ServeiUsuari> ServeisSenseCertificat
         {
             get { return serveisSenseCertificat; }
         }
@@ -318,15 +318,15 @@ namespace BancDelTempsOnline
             return missatgesEnviats.KeysToArray();
         }
       
-        private Missatge[] MissatgesEnviatsRebuts(LlistaOrdenada<Usuari,ListaUnica<Missatge>> missatgeList,Usuari usuari)
+        private Missatge[] MissatgesEnviatsRebuts(LlistaOrdenada<Usuari,LlistaOrdenada<Missatge>> missatgeList,Usuari usuari)
         {
             //per no repetir el mateix codi :)
             Missatge[] missatges;
 
-            if (!missatgeList.Existeix(usuari))
+            if (!missatgeList.ContainsKey(usuari))
                 missatges = new Missatge[] { };
             else
-                missatges = missatgeList[usuari].Ordena().ToTaula();
+            	missatges = missatgeList[usuari].Ordena().ValuesToArray();
 
             return missatges;
         }

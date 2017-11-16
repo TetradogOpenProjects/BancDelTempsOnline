@@ -26,7 +26,7 @@ namespace BancDelTempsOnline
         public const int MAXLONGITUDIMATGEOFERTA = 250 * 1024;//250KB
         string idLocal;//es per poder posarlo en llistes hash i no tenir problemes ja que es un valor fix
         Usuari demandant;
-        ListaUnica<UsuariPerLaOferta> usuarisPerLaOferta;//fer taula per a ells i nova clase!!
+        LlistaOrdenada<UsuariPerLaOferta> usuarisPerLaOferta;//fer taula per a ells i nova clase!!
 
         DateTime inici;
         string titol;//si no hi ha el servei s'utilitzarà el titol
@@ -81,7 +81,7 @@ namespace BancDelTempsOnline
             }
         }
 
-        public ListaUnica<UsuariPerLaOferta> UsuarisPerLaOferta
+        public LlistaOrdenada<UsuariPerLaOferta> UsuarisPerLaOferta
         {
             get
             {
